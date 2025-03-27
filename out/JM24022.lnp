@@ -1,0 +1,14 @@
+".\out\TM52F1376_bsp.obj",
+".\out\TM52F1376_calc_bsp.obj",
+".\out\main.obj",
+".\out\Peripheral.obj",
+".\out\AdcFunction.obj",
+".\out\BatteryFunction.obj",
+".\out\SubFunction.obj",
+".\out\SmokeFunction.obj",
+".\out\LedFunction.obj",
+".\out\KeyMicFunction.obj" 
+TO ".\out\JM24022" 
+PRINT(".\list\JM24022.m51") RAMSIZE(256) 
+CODE( 0x00-0x32,0x3b-0x2cff,0x3000-0x3fef )
+XDATA( 0xff00-0xffff )

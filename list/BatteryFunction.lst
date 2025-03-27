@@ -1,0 +1,372 @@
+C51 COMPILER V9.60.7.0   BATTERYFUNCTION                                                   09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERYFUNCTION
+OBJECT MODULE PLACED IN .\out\BatteryFunction.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\BatteryFunction.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\in
+                    -c;.\Drivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\BatteryFunction.lst) TABS(2) OBJECT(.\out\BatteryFunc
+                    -tion.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------*/
+   2          #include "Global.h"
+   3          /*--------------------------------------------------------------*/
+   4          uint8_t BatPowPercent,BatLevel;
+   5          uint8_t BatState,LowBatCounter,BatCounter,BatPowCnt;
+   6          uint8_t BatScanCnt,BatODCounter;
+   7          uint16_t  RefVddValue,BatVolValue,UsbVolValue;
+   8          
+   9          /*--------------------------------------------------------------*/
+  10          uint8_t UsbState,UsbCounter,ChargeStep,ChargeDelayCnt;
+  11          uint8_t ChrgLevel;
+  12          uint16_t ChargeTime;
+  13          /*--------------------------------------------------------------*/
+  14          ByteBit      BatFlag,UsbFlag,OilFlag;
+  15          /*--------------------------------------------------------------*/
+  16          /*--------------------------------------------------------------*/
+  17          /*--------------------------------------------------------------*/
+  18           /*--------------------------------------------------------------*/
+  19          void ReadBatteryVoltage(void)   //¶ÁÈ¡µç³ØµçÑ¹
+  20          { 
+  21   1        uint32_t m,n;
+  22   1        m = (uint32_t)ADCModule(AD_1V2,10);//HAL_ADC_Sample(ADC_CH_IBAT, True); // AD_1V2£ºADÍ¨µÀÖµ  £¬V£º²ÉÑù´ÎÊ
+             -ý 
+  23   1        n = 4915200 /m; // 1.20*1000*4096/ADÖµ
+  24   1                //n = 4915200 / m; Õâ¸ö¼ÆËã¹«Ê½¸ù¾Ý ADC µÄ²ÉÑùÖµ m ¼ÆËã³öµçÑ¹Öµ¡£¹«Ê½ÖÐµÄ 4915200 ÊÇÍ¨¹ýÒÔÏÂ¼ÆËãµÃµ½µ
+             -Ä³£Êý£º1.20 * 1000 * 4096¡£
+  25   1                          //1.20V ÊÇ²Î¿¼µçÑ¹£¨RefVdd£©£¬1000 ÊÇÎªÁË½«µçÑ¹×ª»¯ÎªºÁ·ü£¬4096 ÊÇ ADC µÄ·Ö±æÂÊ£¨12 Î»
+             - ADC£©
+  26   1      
+  27   1        RefVddValue = (uint16_t) n; //½«¼ÆËãµÃµ½µÄµçÑ¹Öµ n ×ª»»Îª uint16_t ÀàÐÍ£¬¸³Öµ¸ø RefVddValue
+  28   1        BatVolValue = RefVddValue + 30;  //¶Ô RefVddValue ½øÐÐµ÷Õû£¬µÃµ½×îÖÕµÄµç³ØµçÑ¹Öµ BatVolValue¡£´Ë´¦Ôö¼ÓÁËÒ
+             -»¸ö³£Êý 30£¬ÎªÁËÐ£×¼»ò²¹³¥Îó²î
+  29   1      /*
+  30   1        uint32_t m,n;
+  31   1      //  m = (uint32_t)ADC_mean(AD_1V2);   //ÁíÒ»ÖÖËã·¨
+  32   1        n = (uint32_t)Ref1V2;
+  33   1        n = n*4096;
+  34   1        n = n/m;
+  35   1        RefVddValue=(uint16_t)n;
+  36   1        BatVolValue=RefVddValue+110;//30;
+  37   1        */
+  38   1      }
+  39          /*----------------------------------------------------------------------------*/
+  40          void CheckBatteryState(void)    //¼à²âµç³Ø×´Ì¬£¬ÌØ±ðÊÇÅÐ¶Ïµç³ØµçÑ¹ÊÇ·ñµÍÓÚÉè¶¨µÄãÐÖµ£¬²¢¾Ý´Ë¸üÐÂµç³Ø×´Ì¬ÐÅ
+             -Ï¢
+  41          {
+  42   1        if(BatVolValue >= LowBatVoltage)    //±È½Ïµ±Ç°µç³ØµçÑ¹Öµ BatVolValue ÊÇ·ñ´óÓÚ»òµÈÓÚµÍµçÑ¹ãÐÖµ LowBatVolta
+             -ge¡£
+  43   1                          //Èç¹ûÊÇ£¬Ôò½« bBatStateNew ÉèÖÃÎª 1£¨±íÊ¾µç³ØµçÑ¹Õý³££©¡£
+  44   1                          //·ñÔò£¬½« bBatStateNew ÉèÖÃÎª 0£¨±íÊ¾µç³ØµçÑ¹µÍ£©¡£
+  45   1          bBatStateNew =1;
+  46   1        else 
+  47   1          bBatStateNew =0; 
+C51 COMPILER V9.60.7.0   BATTERYFUNCTION                                                   09/25/2024 11:06:14 PAGE 2   
+
+  48   1      
+  49   1        if(bBatStateNew == bBatStateOld)   //Èç¹ûÐÂ¾Éµç³Ø×´Ì¬Ã»ÓÐ±ä»¯£¨¼´ bBatStateNew µÈÓÚ bBatStateOld£©£¬Ôò½« 
+             -LowBatCounter ¼ÆÊýÆ÷ÖØÖÃÎª 0
+  50   1           LowBatCounter=0;
+  51   1            
+  52   1        if(++LowBatCounter >= 100)   // ¸üÐÂµÍµçÑ¹¼ÆÊýÆ÷²¢¼ì²é³¬Ê±   Ã¿´Îµ÷ÓÃ CheckBatteryState º¯ÊýÊ±£¬LowBatCou
+             -nter ¼ÆÊýÆ÷Ôö¼Ó 1
+  53   1        {
+  54   2          LowBatCounter=0;
+  55   2          bBatStateOld = bBatStateNew;
+  56   2          if(bBatStateOld==0) { bBatLow = 1;BatPowPercent=0;}
+  57   2        }
+  58   1      }
+  59          /*--------------------------------------------------------------*/
+  60          /*--------------------------------------------------------------*/
+  61          void CheckBatODState(void)  //¼à²âµç³ØµÄ¹ý·Åµç×´Ì¬£¬²¢¸ù¾Ýµç³ØµçÑ¹×´Ì¬¸üÐÂÏàÓ¦µÄ±êÖ¾Î»
+  62          {
+  63   1        uint16_t TempR16;
+  64   1        if(bBatODOld == 1) TempR16 = ODBatVoltage +300; //È·¶¨µçÑ¹ãÐÖµ     300:Æ«²î
+  65   1                                //Èç¹û¾É×´Ì¬ bBatODOld Îª 1£¨±íÊ¾¹ý·Åµç×´Ì¬£©£¬Ôò½«µçÑ¹ãÐÖµ TempR16 ÉèÖÃÎª ODBatVoltage + 300
+  66   1        else TempR16 = ODBatVoltage;
+  67   1      
+  68   1        if(BatVolValue >= TempR16) bBatODNew =0;
+  69   1        else bBatODNew =1;
+  70   1        if(bBatODNew == bBatODOld) BatODCounter=0;
+  71   1        if(++BatODCounter >= 100)   //¸üÐÂ¹ý·Åµç×´Ì¬¼ÆÊýÆ÷²¢¼ì²é³¬Ê±
+  72   1        {
+  73   2          BatODCounter=0;
+  74   2          bBatODOld = bBatODNew;  //¸üÐÂ¾ÉµÄ¹ý·Åµç×´Ì¬ÖµÎªµ±Ç°µÄÐÂ×´Ì¬Öµ
+  75   2          if(bBatODOld == 1) {bBatOD=1; bBatLow = 1;BatPowPercent=0;}
+  76   2        }
+  77   1      }
+  78          /*--------------------------------------------------------------*/
+  79          /*--------------------------------------------------------------*/
+  80          /*--------------------------------------------------------------*/
+  81          /*--------------------------------------------------------------*/
+  82          void CheckChgBatPercent(void)
+  83          {
+  84   1        uint8_t   TempR8;
+  85   1      //  uint16_t TempR16;
+  86   1        TempR8 = CalBatPercent(BatVolValue+BalVolChgOffset);//TempR16);
+  87   1        if(TempR8 <= BatPowPercent)
+  88   1        {
+  89   2          if((BatPowPercent-TempR8) > 10)
+  90   2          {
+  91   3              if(++ChargeDelayCnt > 15)
+  92   3              {ChargeDelayCnt=0;BatPowPercent=TempR8;} 
+  93   3          }
+  94   2          else {ChargeDelayCnt=0;}
+  95   2          BatPowCnt=0;
+  96   2        }
+  97   1        else {ChargeDelayCnt=0;}
+  98   1        if(BatPowPercent<75) TempR8=30; //30S
+  99   1        else if(BatPowPercent<95) TempR8=60;  //60S
+ 100   1        else TempR8=90; //90S
+ 101   1        ++BatPowCnt;  
+ 102   1        if(BatPowCnt>TempR8)
+ 103   1        {
+ 104   2          BatPowCnt=0;
+ 105   2          if(BatPowPercent<BatPercentMax){ BatPowPercent +=BatPerStep;PuffTime=0;}
+ 106   2          CalBatLevel();
+ 107   2        }
+C51 COMPILER V9.60.7.0   BATTERYFUNCTION                                                   09/25/2024 11:06:14 PAGE 3   
+
+ 108   1      }
+ 109          /*--------------------------------------------------------------*/
+ 110          #if(ChargeSAdorIO == 1)
+              void CheckUsbState(void)
+              {
+                uint16_t Temp16;
+                Temp16 = ADC_mean(AD_UsbChannel);
+                
+                
+              }
+              #endif
+ 119          /*--------------------------------------------------------------*/
+ 120          #if(UsbAdorIO == 0)
+ 121          void CheckUsbState(void)
+ 122          {
+ 123   1        if(USB_TRUE) bUsbNew = 1;
+ 124   1        else bUsbNew = 0;
+ 125   1        if(bUsbOld == bUsbNew) UsbCounter = 0;
+ 126   1        if(++UsbCounter>=10)
+ 127   1        {
+ 128   2          UsbCounter = 0;
+ 129   2          bUsbOld = bUsbNew;
+ 130   2          if(bUsbOld == 1)  UsbState = 1;
+ 131   2          else UsbState = 0;
+ 132   2        }
+ 133   1      }
+ 134          #endif
+ 135          /*--------------------------------------------------------------*/
+ 136          #if(UsbAdorIO == 1)
+              void CheckUsbState(void)
+              {
+                uint32_t m;
+                uint16_t m0,m1,m2;
+                m = (uint32_t)ADC_mean(AD_UsbChannel);
+                m = m*RefVddValue;
+                m = m * 11;
+                m = m/4096;
+                UsbVolValue=(uint16_t) m; 
+                m0=UsbNcVol;m1=UsbOkVol;m2=UsbOvpVol;
+                if(UsbVolValue<m0)
+                {
+                  if(UsbState==UsbNc) {UsbCounter=0;return;}
+                  if(++UsbCounter >= 10)
+                  {
+                    UsbCounter=0;UsbState=UsbNc;
+                  }
+                }
+                else if(UsbVolValue<m2)
+                {
+                  if(UsbState==UsbHigh) {UsbCounter=0;return;}
+                  if(++UsbCounter >= 10)
+                  {
+                    UsbCounter=0;UsbState=UsbOk;
+                  }
+                }
+                else
+                {
+                  if(UsbState==UsbOvp) {UsbCounter=0;return;}
+                  if(++UsbCounter = 10)
+                  {
+                    UsbCounter=0;UsbState=UsbOvp;
+                  }
+C51 COMPILER V9.60.7.0   BATTERYFUNCTION                                                   09/25/2024 11:06:14 PAGE 4   
+
+                }
+              //  UsbState=1;
+              }
+              #endif
+ 174          /*--------------------------------------------------------------*/
+ 175          void IniChargeMode(void)
+ 176          {
+ 177   1        if(MainState==MainCharge) return;
+ 178   1        DelayState=0; 
+ 179   1        ChargeStep=0;
+ 180   1        ChargeTime=0;
+ 181   1        ChrgLevel = BatLevel;
+ 182   1        LEDP_CHARGE;
+ 183   1        MainState=MainCharge;     
+ 184   1      }
+ 185          /*--------------------------------------------------------------*/
+ 186          void SetChargeFullState(void)
+ 187          {
+ 188   1        ChargeStep = 2;
+ 189   1        PuffTime =0;
+ 190   1        ChargeTime = 0;
+ 191   1        BatPowPercent=BatPercentMax;
+ 192   1      }
+ 193          /*--------------------------------------------------------------*/
+ 194          void CheckChargeState(void)  //³äµçº¯Êý
+ 195          {
+ 196   1        uint16_t TempV;
+ 197   1        ChargeTime++;
+ 198   1        TempV = BatVolValue + BalVolOffset;
+ 199   1        switch(ChargeStep)
+ 200   1        {
+ 201   2          case 0:
+ 202   2          {
+ 203   3            if(ChargeTime > 5) ChargeStep=1;
+ 204   3            break;
+ 205   3          }
+ 206   2          case 1:
+ 207   2          {
+ 208   3            if(ChargeTime >= ChargeTimeMax)
+ 209   3            {
+ 210   4              SetChargeFullState(); 
+ 211   4              break;
+ 212   4             }
+ 213   3            if(TempV>=BatFullVol)  //4.15V
+ 214   3            {
+ 215   4              if((ChargeTime%15) == 0)  //15S
+ 216   4              {
+ 217   5                if(BatPowPercent<BatPercentMax)
+ 218   5                {
+ 219   6                  ++BatPowPercent;
+ 220   6                  //CalBatLevel();  //
+ 221   6                  PuffTime=0;
+ 222   6                }
+ 223   5                else {SetChargeFullState(); }
+ 224   5              }
+ 225   4            }
+ 226   3            else if(TempV>=BatFullVol1)  //4.0V
+ 227   3            {
+ 228   4              if((ChargeTime%60) == 0)  //60S
+ 229   4              {
+ 230   5                if(BatPowPercent<BatPercentMax)
+ 231   5                {
+C51 COMPILER V9.60.7.0   BATTERYFUNCTION                                                   09/25/2024 11:06:14 PAGE 5   
+
+ 232   6                  ++BatPowPercent;
+ 233   6                  //CalBatLevel();  //
+ 234   6                  PuffTime=0;
+ 235   6                }
+ 236   5                else {SetChargeFullState(); }
+ 237   5              }
+ 238   4            }
+ 239   3            break;
+ 240   3          }
+ 241   2          case 2:
+ 242   2          {
+ 243   3             if(ChargeTime > 15) ChargeStep=3;
+ 244   3            break;
+ 245   3          }
+ 246   2          case 3:
+ 247   2          {
+ 248   3            
+ 249   3            break;
+ 250   3          }
+ 251   2          default:{break;}
+ 252   2        } 
+ 253   1      }
+ 254          /*--------------------------------------------------------------*/
+ 255          void BatChargeFunction(void)   //µç³Ø³äµçº¯Êý
+ 256          {
+ 257   1        if(bTimeBat == 0) return;   // Èç¹û bTimeBat Îª 0£¬º¯ÊýÁ¢¼´·µ»Ø£¬²»×öÈÎºÎ´¦Àí¡£           
+ 258   1        bTimeBat = 0;
+ 259   1        if(++BatScanCnt < 100) return;//·ñÔò£¬½« bTimeBat ÉèÖÃÎª 0£¬²¢ÇÒÖ»ÓÐµ± BatScanCnt ´ïµ½ 100 Ê±²Å»á¼ÌÐøÖ´ÐÐ
+ 260   1        BatScanCnt=0;
+ 261   1        CheckChgBatPercent();//¼ì²éµç³ØµçÁ¿°Ù·Ö±È
+ 262   1        CheckChargeState();//µ÷Õû³äµç²½Öè
+ 263   1        if(bBatLow==1)
+ 264   1        {
+ 265   2          if(BatPowPercent > 0) bBatLow=0;   //Èç¹û bBatLow Îª 1£¬ÇÒ BatPowPercent ´óÓÚ 0£¬Ôò½« bBatLow ÉèÖÃÎª 0
+ 266   2        }
+ 267   1      }
+ 268          /*--------------------------------------------------------------*/
+ 269          const uint16_t code TabBatVol[]=
+ 270          {
+ 271          //   <=0% <=5%<=15%<=20%<=25%<=30%<=35%<=40%<=45%<=50%  
+ 272            3500,3550,3600,3650,3675,3700,3725,3750,3775,3800,
+ 273          //  <=55%<=60%<=65%<=70%<=75%<=80%<=85%<=90%<=95%<=100%
+ 274            3815,3830,3845,3860,3890,3905,3920,3950,4000,4050,4100,
+ 275          ////   <=0% <=5%<=15%<=20%<=25%<=30%<=35%<=40%<=45%<=50%  
+ 276          //  3200,3275,3350,3425,3500,3550,3600,3650,3700,3750,
+ 277          ////  <=55%<=60%<=65%<=70%<=75%<=80%<=85%<=90%<=95%<=100%
+ 278          //  3800,3830,3860,3880,3910,3940,3970,4000,4030,4060,4100,
+ 279            
+ 280          };
+ 281          /*--------------------------------------------------------------*/
+ 282          uint8_t CalBatPercent(uint16_t VData)   //¸ù¾ÝÊäÈëµÄµçÑ¹Öµ VData ¼ÆËãµç³ØµÄµçÁ¿°Ù·Ö±È
+ 283          {
+ 284   1        uint8_t i,j;
+ 285   1        uint16_t m,n;
+ 286   1        for(i=0;i<21;i++)
+ 287   1        {
+ 288   2          if(VData<=TabBatVol[i])     //µçÁ¿µÍÓÚÊý×éÉèÖÃ×îÐ¡µçÑ¹Öµ£¬ÍË³öº¯Êý
+ 289   2            break;
+ 290   2        }
+ 291   1        #if(BatPerStep==1)    //°ÙÒ»
+ 292   1        if(i>=21) 
+ 293   1        {
+C51 COMPILER V9.60.7.0   BATTERYFUNCTION                                                   09/25/2024 11:06:14 PAGE 6   
+
+ 294   2          i=100;
+ 295   2        }
+ 296   1        else if(i>0)
+ 297   1        {
+ 298   2          m = (TabBatVol[i]-TabBatVol[i-1])/5;
+ 299   2          n = VData - TabBatVol[i-1];
+ 300   2          n = n/m;
+ 301   2          j = (uint8_t) n;
+ 302   2          if(j>5) j = 5;
+ 303   2          i -=1;
+ 304   2          i *=5;
+ 305   2          i +=j;
+ 306   2        } 
+ 307   1        #endif
+ 308   1        #if(BatPerStep==5)
+                if(i>=21) {i=100;}
+                else if(i>0)
+                {
+                  i -=1;
+                  i *=BatPerStep;
+                } 
+                #endif
+ 316   1        if(i>100) i=100;
+ 317   1        return i; 
+ 318   1      }
+ 319          /*--------------------------------------------------------------*/
+ 320          void CalBatLevel(void)
+ 321          {
+ 322   1        if(BatPowPercent == 0) BatLevel=0;
+ 323   1        else if(BatPowPercent <= 10) BatLevel=1;
+ 324   1        else if(BatPowPercent <= 30) BatLevel=2;
+ 325   1        else if(BatPowPercent <= 60) BatLevel=3;
+ 326   1        else BatLevel = 4;
+ 327   1      }
+ 328          /*--------------------------------------------------------------*/
+ 329          /*--------------------------------------------------------------*/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1070    ----
+   CONSTANT SIZE    =     42    ----
+   XDATA SIZE       =     24       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

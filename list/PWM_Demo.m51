@@ -1,0 +1,508 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        04/30/2022  09:25:31  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+D:\KEIL_V5\C51\BIN\BL51.EXE .\obj\main.obj, .\obj\TM52F1376_bsp.obj, .\obj\TM52F1376_calc_bsp.obj TO .\obj\PWM_Demo PRIN
+>> T (.\list\PWM_Demo.m51) RAMSIZE (256) CODE (0X00-0X32, 0X3B-0X3FEF) XDATA (0XFF00-0XFFFF)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  .\obj\main.obj (MAIN)
+  .\obj\TM52F1376_bsp.obj (TM52F1376_BSP)
+  .\obj\TM52F1376_calc_bsp.obj (TM52F1376_CALC_BSP)
+  D:\KEIL_V5\C51\LIB\C51S.LIB (?C_STARTUP)
+  D:\KEIL_V5\C51\LIB\C51S.LIB (?C?SLCMP)
+  D:\KEIL_V5\C51\LIB\C51S.LIB (?C_INIT)
+
+
+LINK MAP OF MODULE:  .\obj\PWM_Demo (MAIN)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0008H     UNIT         _DATA_GROUP_
+            DATA    0010H     0006H     UNIT         ?DT?_DIV_32?TM52F1376_CALC_BSP
+            DATA    0016H     0006H     UNIT         ?DT?_MOD_32?TM52F1376_CALC_BSP
+            DATA    001CH     0006H     UNIT         ?DT?TM52F1376_CALC_BSP
+            DATA    0022H     0002H     UNIT         ?DT?MAIN
+            IDATA   0024H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     002FH     UNIT         ?PR?_DIV_16?TM52F1376_CALC_BSP
+                    0032H     0009H                  *** GAP ***
+            CODE    003BH     0033H     UNIT         ?PR?_BSP_FASTCLOCK_INIT?TM52F1376_BSP
+                    006EH     0005H                  *** GAP ***
+            CODE    0073H     0003H     ABSOLUTE     
+            CODE    0076H     00BCH     UNIT         ?PR?_PWM_INIT?MAIN
+            CODE    0132H     00BAH     UNIT         ?PR?MAIN?MAIN
+            CODE    01ECH     008CH     UNIT         ?C_C51STARTUP
+            CODE    0278H     004FH     UNIT         ?PR?PXMOD_CONFIG?MAIN
+            CODE    02C7H     0045H     UNIT         ?PR?_DIV_32?TM52F1376_CALC_BSP
+            CODE    030CH     003CH     UNIT         ?PR?_MOD_32?TM52F1376_CALC_BSP
+            CODE    0348H     003BH     UNIT         ?PR?_PWM_OUT?MAIN
+            CODE    0383H     0039H     UNIT         ?PR?_MUL_32?TM52F1376_CALC_BSP
+            CODE    03BCH     001DH     UNIT         ?PR?PWM_INT?MAIN
+            CODE    03D9H     001AH     UNIT         ?PR?_BSP_DELAY_100US?TM52F1376_BSP
+            CODE    03F3H     001AH     UNIT         ?PR?_BSP_DELAY_MS?TM52F1376_BSP
+            CODE    040DH     0016H     UNIT         ?C?LIB_CODE
+            CODE    0423H     0007H     UNIT         ?C_INITSEG
+
+
+
+OVERLAY MAP OF MODULE:   .\obj\PWM_Demo (MAIN)
+
+
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/30/2022  09:25:31  PAGE 2
+
+
+SEGMENT                                         DATA_GROUP 
+  +--> CALLED SEGMENT                         START    LENGTH
+-------------------------------------------------------------
+?C_C51STARTUP                                 -----    -----
+  +--> ?PR?MAIN?MAIN
+  +--> ?C_INITSEG
+
+?PR?MAIN?MAIN                                 0008H    0002H
+  +--> ?PR?_BSP_FASTCLOCK_INIT?TM52F1376_BSP
+  +--> ?PR?_BSP_DELAY_100US?TM52F1376_BSP
+  +--> ?PR?PXMOD_CONFIG?MAIN
+  +--> ?PR?_PWM_INIT?MAIN
+  +--> ?PR?_BSP_DELAY_MS?TM52F1376_BSP
+  +--> ?PR?_PWM_OUT?MAIN
+
+?PR?_PWM_INIT?MAIN                            000AH    0006H
+
+
+
+SYMBOL TABLE OF MODULE:  .\obj\PWM_Demo (MAIN)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        MAIN
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:0090H         PUBLIC        P1
+  C:03BCH         PUBLIC        PWM_Int
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  D:00A7H         PUBLIC        PWMCON2
+  D:0022H         PUBLIC        pinmod_value
+  D:00A8H         PUBLIC        IE
+  C:0352H         PUBLIC        _PWM_Out
+  D:00B8H         PUBLIC        IP
+  D:00F8H         PUBLIC        AUX1
+  C:0132H         PUBLIC        main
+  D:00A2H         PUBLIC        PINMOD10
+  D:0091H         PUBLIC        PORTIDX
+  D:00A3H         PUBLIC        PINMOD32
+  D:00D1H         PUBLIC        PWM0DH
+  D:00D3H         PUBLIC        PWM1DH
+  D:00A4H         PUBLIC        PINMOD54
+  D:00D5H         PUBLIC        PWM2DH
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  D:00D2H         PUBLIC        PWM0DL
+  D:00D4H         PUBLIC        PWM1DL
+  D:00A5H         PUBLIC        PINMOD76
+  D:00D6H         PUBLIC        PWM2DL
+  D:00D8H         PUBLIC        CLKCON
+  D:00D9H         PUBLIC        PWM0PRDH
+  D:00DBH         PUBLIC        PWM1PRDH
+  D:00A1H         PUBLIC        PWMCON
+  D:00DDH         PUBLIC        PWM2PRDH
+  D:00DAH         PUBLIC        PWM0PRDL
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/30/2022  09:25:31  PAGE 3
+
+
+  D:00DCH         PUBLIC        PWM1PRDL
+  D:00DEH         PUBLIC        PWM2PRDL
+  D:0086H         PUBLIC        INTPWM
+  D:00A9H         PUBLIC        INTE1
+  C:0278H         PUBLIC        PxMOD_Config
+  D:0023H         PUBLIC        pindata
+  D:00C8H         PUBLIC        T2CON
+  C:007EH         PUBLIC        _PWM_Init
+  D:00D0H         PUBLIC        PSW
+  -------         PROC          MAIN
+  -------         DO            
+  D:0008H         SYMBOL        i
+  -------         ENDDO         
+  C:0132H         LINE#         20
+  C:0132H         LINE#         21
+  C:0132H         LINE#         24
+  C:0137H         LINE#         25
+  C:013EH         LINE#         26
+  C:0141H         LINE#         27
+  C:0151H         LINE#         28
+  C:0159H         LINE#         29
+  C:0161H         LINE#         30
+  C:0168H         LINE#         32
+  C:0168H         LINE#         33
+  C:0168H         LINE#         34
+  C:017FH         LINE#         35
+  C:017FH         LINE#         36
+  C:018CH         LINE#         37
+  C:018FH         LINE#         38
+  C:019CH         LINE#         39
+  C:01A3H         LINE#         40
+  C:01ADH         LINE#         42
+  C:01BEH         LINE#         43
+  C:01BEH         LINE#         44
+  C:01CBH         LINE#         45
+  C:01CEH         LINE#         46
+  C:01DBH         LINE#         47
+  C:01E2H         LINE#         48
+  -------         ENDPROC       MAIN
+  -------         PROC          L?0028
+  -------         ENDPROC       L?0028
+  -------         PROC          _PWM_INIT
+  D:0001H         SYMBOL        per
+  D:0004H         SYMBOL        duty
+  D:0002H         SYMBOL        prd
+  D:000FH         SYMBOL        clksrc
+  C:007EH         LINE#         63
+  C:0080H         LINE#         64
+  C:0080H         LINE#         65
+  C:0083H         LINE#         67
+  C:0086H         LINE#         68
+  C:0086H         LINE#         69
+  C:0089H         LINE#         70
+  C:008CH         LINE#         72
+  C:0094H         LINE#         75
+  C:0097H         LINE#         76
+  C:009AH         LINE#         77
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/30/2022  09:25:31  PAGE 4
+
+
+  C:009DH         LINE#         78
+  C:00A0H         LINE#         81
+  C:00A3H         LINE#         82
+  C:00ABH         LINE#         86
+  C:00AEH         LINE#         87
+  C:00B6H         LINE#         90
+  C:00B9H         LINE#         92
+  C:00BAH         LINE#         93
+  C:00BFH         LINE#         94
+  C:00BFH         LINE#         95
+  C:00C2H         LINE#         96
+  C:00C5H         LINE#         98
+  C:00D3H         LINE#         101
+  C:00D6H         LINE#         102
+  C:00D9H         LINE#         103
+  C:00DCH         LINE#         104
+  C:00DFH         LINE#         107
+  C:00E2H         LINE#         108
+  C:00EAH         LINE#         112
+  C:00EDH         LINE#         113
+  C:00F5H         LINE#         116
+  C:00F8H         LINE#         118
+  C:00F9H         LINE#         120
+  C:00F9H         LINE#         121
+  C:00FCH         LINE#         122
+  C:00FFH         LINE#         124
+  C:010CH         LINE#         127
+  C:010FH         LINE#         128
+  C:0112H         LINE#         129
+  C:0115H         LINE#         130
+  C:0118H         LINE#         133
+  C:011BH         LINE#         134
+  C:0123H         LINE#         138
+  C:0126H         LINE#         139
+  C:012EH         LINE#         142
+  C:0131H         LINE#         144
+  C:0131H         LINE#         147
+  -------         ENDPROC       _PWM_INIT
+  -------         PROC          L?0027
+  -------         ENDPROC       L?0027
+  -------         PROC          _PWM_OUT
+  D:0001H         SYMBOL        per
+  D:0004H         SYMBOL        duty
+  D:0002H         SYMBOL        prd
+  C:0352H         LINE#         152
+  C:0354H         LINE#         153
+  C:0354H         LINE#         154
+  C:0357H         LINE#         155
+  C:0357H         LINE#         158
+  C:035AH         LINE#         159
+  C:035DH         LINE#         161
+  C:0360H         LINE#         162
+  C:0363H         LINE#         165
+  C:0364H         LINE#         166
+  C:0369H         LINE#         167
+  C:0369H         LINE#         170
+  C:036CH         LINE#         171
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/30/2022  09:25:31  PAGE 5
+
+
+  C:036FH         LINE#         173
+  C:0372H         LINE#         174
+  C:0375H         LINE#         177
+  C:0376H         LINE#         179
+  C:0376H         LINE#         182
+  C:0379H         LINE#         183
+  C:037CH         LINE#         185
+  C:037FH         LINE#         186
+  C:0382H         LINE#         189
+  C:0382H         LINE#         190
+  -------         ENDPROC       _PWM_OUT
+  -------         PROC          PXMOD_CONFIG
+  C:0278H         LINE#         215
+  C:0278H         LINE#         216
+  C:0278H         LINE#         217
+  C:027BH         LINE#         218
+  C:027EH         LINE#         221
+  C:0281H         LINE#         222
+  C:0284H         LINE#         223
+  C:0287H         LINE#         224
+  C:028AH         LINE#         225
+  C:028DH         LINE#         226
+  C:0290H         LINE#         229
+  C:0293H         LINE#         230
+  C:0296H         LINE#         231
+  C:0299H         LINE#         232
+  C:029CH         LINE#         233
+  C:029FH         LINE#         234
+  C:02A2H         LINE#         237
+  C:02A5H         LINE#         238
+  C:02A8H         LINE#         239
+  C:02ABH         LINE#         240
+  C:02AEH         LINE#         241
+  C:02B1H         LINE#         242
+  C:02B4H         LINE#         245
+  C:02B7H         LINE#         246
+  C:02BAH         LINE#         247
+  C:02BDH         LINE#         248
+  C:02C0H         LINE#         249
+  C:02C3H         LINE#         250
+  C:02C6H         LINE#         251
+  -------         ENDPROC       PXMOD_CONFIG
+  -------         PROC          PWM_INT
+  C:03BCH         LINE#         260
+  C:03BEH         LINE#         264
+  C:03C3H         LINE#         265
+  C:03C3H         LINE#         267
+  C:03C6H         LINE#         268
+  C:03C6H         LINE#         270
+  C:03CBH         LINE#         271
+  C:03CBH         LINE#         273
+  C:03CEH         LINE#         274
+  C:03CEH         LINE#         276
+  C:03D3H         LINE#         277
+  C:03D3H         LINE#         279
+  C:03D6H         LINE#         280
+  C:03D6H         LINE#         281
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/30/2022  09:25:31  PAGE 6
+
+
+  -------         ENDPROC       PWM_INT
+  -------         ENDMOD        MAIN
+
+  -------         MODULE        TM52F1376_BSP
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:0090H         PUBLIC        P1
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  D:00A8H         PUBLIC        IE
+  D:00B8H         PUBLIC        IP
+  D:00F8H         PUBLIC        AUX1
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  B:00D8H.2       PUBLIC        SELFCK
+  D:00D8H         PUBLIC        CLKCON
+  B:00D8H.3       PUBLIC        STPFCK
+  B:00D8H.4       PUBLIC        STPPCK
+  C:03F3H         PUBLIC        _Bsp_delay_ms
+  D:00C8H         PUBLIC        T2CON
+  C:03D9H         PUBLIC        _Bsp_delay_100us
+  D:00D0H         PUBLIC        PSW
+  C:003BH         PUBLIC        _Bsp_FastClock_Init
+  -------         PROC          _BSP_DELAY_100US
+  D:0006H         SYMBOL        cnt
+  -------         DO            
+  D:0004H         SYMBOL        i
+  D:0003H         SYMBOL        delay_cnt
+  -------         ENDDO         
+  C:03D9H         LINE#         18
+  C:03D9H         LINE#         19
+  C:03D9H         LINE#         22
+  C:03E3H         LINE#         23
+  C:03E3H         LINE#         24
+  C:03E5H         LINE#         25
+  C:03EBH         LINE#         26
+  C:03F2H         LINE#         27
+  -------         ENDPROC       _BSP_DELAY_100US
+  -------         PROC          _BSP_DELAY_MS
+  D:0006H         SYMBOL        ms
+  -------         DO            
+  D:0004H         SYMBOL        i
+  D:0003H         SYMBOL        delay_cnt
+  -------         ENDDO         
+  C:03F3H         LINE#         30
+  C:03F3H         LINE#         31
+  C:03F3H         LINE#         34
+  C:03FDH         LINE#         35
+  C:03FDH         LINE#         36
+  C:03FFH         LINE#         37
+  C:0405H         LINE#         38
+  C:040CH         LINE#         39
+  -------         ENDPROC       _BSP_DELAY_MS
+  -------         PROC          _BSP_FASTCLOCK_INIT
+  D:0007H         SYMBOL        div
+  C:003BH         LINE#         45
+  C:003BH         LINE#         46
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/30/2022  09:25:31  PAGE 7
+
+
+  C:003BH         LINE#         47
+  C:003DH         LINE#         49
+  C:003FH         LINE#         51
+  C:0049H         LINE#         52
+  C:004BH         LINE#         53
+  C:0055H         LINE#         54
+  C:0057H         LINE#         55
+  C:0061H         LINE#         56
+  C:0063H         LINE#         57
+  C:006DH         LINE#         58
+  -------         ENDPROC       _BSP_FASTCLOCK_INIT
+  -------         ENDMOD        TM52F1376_BSP
+
+  -------         MODULE        TM52F1376_CALC_BSP
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:0090H         PUBLIC        P1
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  C:030CH         PUBLIC        _mod_32
+  C:02C7H         PUBLIC        _div_32
+  C:0003H         PUBLIC        _div_16
+  D:00A8H         PUBLIC        IE
+  D:00CEH         PUBLIC        EXA2
+  D:00CFH         PUBLIC        EXA3
+  C:0383H         PUBLIC        _mul_32
+  D:00B8H         PUBLIC        IP
+  D:00F8H         PUBLIC        AUX1
+  D:00F7H         PUBLIC        AUX2
+  D:001CH         PUBLIC        clac_mid
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  D:00D8H         PUBLIC        CLKCON
+  D:0020H         PUBLIC        mid_1
+  D:0021H         PUBLIC        mid_2
+  D:00E6H         PUBLIC        EXA
+  D:00E7H         PUBLIC        EXB
+  D:00C8H         PUBLIC        T2CON
+  D:00D0H         PUBLIC        PSW
+  -------         PROC          _MUL_32
+  D:0006H         SYMBOL        a
+  D:0004H         SYMBOL        b
+  C:0383H         LINE#         20
+  C:0383H         LINE#         21
+  C:0383H         LINE#         22
+  C:0387H         LINE#         23
+  C:038AH         LINE#         24
+  C:038DH         LINE#         26
+  C:0391H         LINE#         27
+  C:0394H         LINE#         28
+  C:0397H         LINE#         30
+  C:039FH         LINE#         32
+  C:03AAH         LINE#         33
+  C:03ADH         LINE#         34
+  C:03B0H         LINE#         35
+  C:03B3H         LINE#         36
+  C:03BBH         LINE#         37
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/30/2022  09:25:31  PAGE 8
+
+
+  -------         ENDPROC       _MUL_32
+  -------         PROC          _DIV_16
+  D:0006H         SYMBOL        a
+  D:0004H         SYMBOL        b
+  C:0003H         LINE#         43
+  C:0003H         LINE#         44
+  C:0003H         LINE#         48
+  C:0007H         LINE#         49
+  C:000AH         LINE#         50
+  C:000DH         LINE#         51
+  C:0011H         LINE#         52
+  C:0014H         LINE#         53
+  C:0017H         LINE#         55
+  C:001FH         LINE#         56
+  C:0027H         LINE#         57
+  C:002AH         LINE#         58
+  C:002DH         LINE#         59
+  C:0031H         LINE#         60
+  -------         ENDPROC       _DIV_16
+  -------         PROC          _DIV_32
+  D:0004H         SYMBOL        a
+  D:0014H         SYMBOL        b
+  C:02C7H         LINE#         66
+  C:02C7H         LINE#         67
+  C:02C7H         LINE#         71
+  C:02CFH         LINE#         72
+  C:02D2H         LINE#         73
+  C:02D5H         LINE#         74
+  C:02D8H         LINE#         75
+  C:02DBH         LINE#         76
+  C:02E1H         LINE#         77
+  C:02E4H         LINE#         78
+  C:02E7H         LINE#         79
+  C:02EFH         LINE#         81
+  C:02F7H         LINE#         83
+  C:02FAH         LINE#         84
+  C:02FDH         LINE#         85
+  C:0300H         LINE#         86
+  C:0303H         LINE#         87
+  C:030BH         LINE#         88
+  -------         ENDPROC       _DIV_32
+  -------         PROC          _MOD_32
+  D:0004H         SYMBOL        a
+  D:001AH         SYMBOL        b
+  C:030CH         LINE#         90
+  C:030CH         LINE#         91
+  C:030CH         LINE#         92
+  C:0314H         LINE#         93
+  C:0317H         LINE#         94
+  C:031AH         LINE#         95
+  C:031DH         LINE#         96
+  C:0320H         LINE#         97
+  C:0326H         LINE#         98
+  C:0329H         LINE#         99
+  C:032CH         LINE#         100
+  C:0334H         LINE#         102
+  C:033DH         LINE#         103
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/30/2022  09:25:31  PAGE 9
+
+
+  C:0340H         LINE#         106
+  C:0343H         LINE#         107
+  C:0347H         LINE#         108
+  -------         ENDPROC       _MOD_32
+  -------         ENDMOD        TM52F1376_CALC_BSP
+
+  -------         MODULE        ?C?SLCMP
+  C:040DH         PUBLIC        ?C?SLCMP
+  -------         ENDMOD        ?C?SLCMP
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_MUL_32?TM52F1376_CALC_BSP
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DIV_16?TM52F1376_CALC_BSP
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DIV_32?TM52F1376_CALC_BSP
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_MOD_32?TM52F1376_CALC_BSP
+
+Program Size: data=37.0 xdata=0 code=1052
+LINK/LOCATE RUN COMPLETE.  4 WARNING(S),  0 ERROR(S)

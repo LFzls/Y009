@@ -1,0 +1,9 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<CallDll>
+	<ProjectFileName>JM24022.uvproj</ProjectFileName>
+	<ChipName>TM52F1376</ChipName>
+	<DllName>TM52Dll</DllName>
+	<OutFileName>JM24022</OutFileName>
+	<OutFolderName>.\out\</OutFolderName>
+	<DllFolderPath>D:\Keil_v5\C51\TM52\</DllFolderPath>
+</CallDll>

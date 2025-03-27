@@ -1,0 +1,135 @@
+C51 COMPILER V9.60.7.0   KEYMICFUNCTION                                                    09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE KEYMICFUNCTION
+OBJECT MODULE PLACED IN .\out\KeyMicFunction.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\KeyMicFunction.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\inc
+                    -;.\Drivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\KeyMicFunction.lst) TABS(2) OBJECT(.\out\KeyMicFunctio
+                    -n.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2           ** Function :  KeyMicFunction.c
+   3           ******************************************************************************/
+   4          
+   5          /******************************************************************************
+   6           ** Include files
+   7           ******************************************************************************/
+   8          #include "Global.h"
+   9          /*----------------------------------------------*/
+  10          #define SwitchTorF 1
+  11          uint8_t MicScnCnt;
+  12          ByteBit MicInfoFlag;
+  13          void MicIni(void)
+  14          {
+  15   1        MicScnCnt = 0;
+  16   1        bMicNew = 0;
+  17   1        bMicOld = 0;
+  18   1      }
+  19          void MicScan(void)
+  20          {
+  21   1        if(MIC_TRUE) bMicNew =1;
+  22   1        else bMicNew = 0;
+  23   1        if(bMicNew == bMicOld) {MicScnCnt = 0;}    // Èç¹ûµ±Ç°Âó¿Ë·ç×´Ì¬ bMicNew ÓëÉÏÒ»¸ö×´Ì¬ bMicOld ÏàÍ¬£¬Ôò½« 
+             -MicScnCnt ÖÃÎª 0
+  24   1        if(++MicScnCnt >= 3)
+  25   1        {
+  26   2          MicScnCnt = 0;
+  27   2          bMicOld = bMicNew;    
+  28   2        }
+  29   1      }    
+  30          /*----------------------------------------------*/
+  31          uint8_t KeyScanCnt,KeyCounter;
+  32          uint16_t KeyDelayCnt,KeyCntDelay;
+  33          ByteBit KeyInfoFlag;
+  34          /*----------------------------------------------*/
+  35          /*------------------------------------------*/
+  36          #if(SwitchTorF==1)
+  37          uint8_t SwScanCnt;
+  38          uint8_t SwStateNew,SwStateOld;
+  39          uint16_t SwAdValue;
+  40          //bit F_SwNew;
+  41          //bit F_SwOld;
+  42          void SwitchIni(void)
+  43          {
+  44   1         SwInAD;
+  45   1        SwScanCnt=0;
+  46   1      //  F_SwNew = 0;
+  47   1      //  F_SwOld = 0;
+  48   1      
+  49   1         SwStateNew = 0;
+  50   1        SwAdValue=ReadAdResult(ADC_CH_SW);
+  51   1         if(SwAdValue < SwAdValue0) SwStateNew=0x01;  //×ó±ß    //
+  52   1         else if(SwAdValue < SwAdValue1) SwStateNew=0x02; //ÓÒ±ß  //Ó¦¸ÃÊÇ1/11Vcc£¬ÉÏÃæµÄÊÇ<150,Ó¦¸ÃÊÇ0    ×î×ó±
+C51 COMPILER V9.60.7.0   KEYMICFUNCTION                                                    09/25/2024 11:06:14 PAGE 2   
+
+             -ß¹Ø»ú£¬ÖÐ¼ä¿ª»ú¼Óµ¥·¢£¬ÓÒ±ßË«·¢ 
+  53   1         else  SwStateNew=0x03;  //ÖÐ¼ä
+  54   1      
+  55   1      //    if(SW_TRUE) {F_SwOld=1;F_SwNew=1;}
+  56   1        SwStateOld = SwStateNew;
+  57   1        // if(SwStateOld==1) FlavorMode=0;
+  58   1        // else if(SwStateOld==2) FlavorMode=1;    //Õâ±ßÒª»»³ÉÈýÖÖ×´Ì¬£¬µ¥·¢£¬Ë«·¢£¬¹Ø»ú
+  59   1        // else { FlavorMode=2;}
+  60   1        if(SwStateOld==1) {ChanNum = 0;}   //ÕâÀïÒª¸Ä³É¹Ø»ú±êÖ¾Âð
+  61   1        else if(SwStateOld==2) ChanNum = 1;        //Õâ±ßÒª»»³ÉÈýÖÖ×´Ì¬£¬µ¥·¢£¬Ë«·¢£¬¹Ø»ú
+  62   1        else  
+  63   1        {
+  64   2          MainState = MainTurnOn;
+  65   2          IniMainTurnOn();   //²»¼ÓÕâ¸ö£¬²¦µ½×ó±ßË¯ÃßµÄÊ±ºòÒªÏÈÌø³öË¯Ãß£¬²ÅÄÜ»½ÐÑ£¬¾ÍÒªÏÈ²¦¶¯Ò»´Î¿ª¹Ø£¬ÔÙÖØÐÂ²¦¶¯Ò
+             -»´Î
+  66   2          ChanNum = 2;   
+  67   2        }
+  68   1        
+  69   1      }
+  70          void SwitchScan(void)
+  71          {
+  72   1         SwInAD;
+  73   1         SwStateNew = 0;
+  74   1         SwAdValue=ReadAdResult(ADC_CH_SW);
+  75   1         if(SwAdValue < SwAdValue0) {SwStateNew=0x01;ChanNum = 0;}
+  76   1         else if(SwAdValue < SwAdValue1) SwStateNew=0x02;
+  77   1         else  SwStateNew=0x03;
+  78   1      
+  79   1        if(SwStateNew == SwStateOld)
+  80   1        {
+  81   2          SwScanCnt=0;
+  82   2        }
+  83   1        if(++SwScanCnt >=15)
+  84   1        {
+  85   2          SwScanCnt=0;
+  86   2          SwStateOld = SwStateNew;
+  87   2           if(SwStateOld == 1) 
+  88   2          {
+  89   3            ChanNum = 0;
+  90   3            MainState = MainTurnOff;
+  91   3            IniMainTurnOff();
+  92   3           }
+  93   2            else if(SwStateOld == 2)  ChanNum = 1;    
+  94   2            else
+  95   2            {
+  96   3            MainState = MainTurnOn;
+  97   3            IniMainTurnOn();
+  98   3            ChanNum =2;   
+  99   3            }
+ 100   2         }
+ 101   1      }
+ 102          #endif
+ 103          /*------------------------------------------*/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    364    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     14    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.7.0   KEYMICFUNCTION                                                    09/25/2024 11:06:14 PAGE 3   
+
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

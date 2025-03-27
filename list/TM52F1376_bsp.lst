@@ -1,0 +1,85 @@
+C51 COMPILER V9.60.7.0   TM52F1376_BSP                                                     09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TM52F1376_BSP
+OBJECT MODULE PLACED IN .\out\TM52F1376_bsp.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Drivers\src\TM52F1376_bsp.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Driv
+                    -ers\inc;.\Drivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\TM52F1376_bsp.lst) TABS(2) OBJECT(.\out\TM52F13
+                    -76_bsp.obj)
+
+line level    source
+
+   1          /**
+   2          ******************************************************************************
+   3          * @file    HTX3736_bsp.c
+   4          * @brief   HTX3736_bsp Source File.
+   5          *
+   6          * @version V1.0.0
+   7          * @author  Hitenx Software Team
+   8          * @date    2021/04/13
+   9          *
+  10          * Copyright (C) Hitenx (Wuxi) Technology Co., Ltd
+  11          ******************************************************************************
+  12          */
+  13          
+  14          #include "REGtenxTM52F1376.h"
+  15          #include "TM52F1376_bsp.h"
+  16          #include <intrins.h>
+  17          
+  18          void Bsp_delay_100us(unsigned int cnt)
+  19          {
+  20   1        unsigned int i;
+  21   1        unsigned char delay_cnt;
+  22   1        for(i = 0;i<cnt;i++)
+  23   1        {
+  24   2          delay_cnt = 200;
+  25   2          while(delay_cnt--);
+  26   2        }
+  27   1      }
+  28          
+  29          
+  30          void Bsp_delay_ms(unsigned int ms)
+  31          {
+  32   1        unsigned int i;
+  33   1        unsigned char delay_cnt;
+  34   1        for(i = 0;i<ms;i++)
+  35   1        {
+  36   2          delay_cnt = 250;   
+  37   2          while(delay_cnt--);
+  38   2        }
+  39   1      }
+  40          
+  41          /*-----------------------------------------------------------------
+  42             FRC=18.432Mhz, Div=4, sysClk=4.608Mhz
+  43             FRC=18.432Mhz, Div=16,sysClk=1.152Mhz
+  44            -----------------------------------------------------------------*/
+  45          void Bsp_FastClock_Init(SysClk_Prescaler_TypeDef div)
+  46          {
+  47   1          SELFCK = 0;      //切换到慢时钟    
+  48   1        
+  49   1          CLKCON=(CLKCON&(~CLKCON_MASK))|div;
+  50   1        
+  51   1          Delay_10nop();
+  52   1          STPPCK = 0;      //开启快时钟
+  53   1          Delay_10nop();
+C51 COMPILER V9.60.7.0   TM52F1376_BSP                                                     09/25/2024 11:06:14 PAGE 2   
+
+  54   1          STPFCK = 0;      //开启部分模块使用快时钟
+  55   1          Delay_10nop();
+  56   1          SELFCK = 1;      //切换到快时钟
+  57   1          Delay_10nop(); 
+  58   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    103    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

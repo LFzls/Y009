@@ -1,0 +1,151 @@
+C51 COMPILER V9.60.7.0   TM52F1376_CALC_BSP                                                09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TM52F1376_CALC_BSP
+OBJECT MODULE PLACED IN .\out\TM52F1376_calc_bsp.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Drivers\src\TM52F1376_calc_bsp.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.
+                    -\Drivers\inc;.\Drivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\TM52F1376_calc_bsp.lst) TABS(2) OBJECT(.\o
+                    -ut\TM52F1376_calc_bsp.obj)
+
+line level    source
+
+   1          
+   2          #include <intrins.h>
+   3          
+   4          #include "REGtenxTM52F1376.h"
+   5          
+   6          #include "TM52F1376_calc_bsp.h"
+   7          
+   8          
+   9          /* 中间值定义成全局变量，不用定义局部变量节省时间 
+  10           * 使用时，该函数是不可重载函数，需要特别注意不能在中断和主函数中同时使用
+  11           * 建议使用该函数前关闭中断 
+  12           */
+  13          calc_mid_t clac_mid;
+  14          unsigned char mid_1,mid_2;
+  15          
+  16          /*-------------------------------------------------------------------------
+  17            16bit无符号数  乘以 16bit 无符号数
+  18            返回结果为32bit 无符号数
+  19            -------------------------------------------------------------------------*/
+  20          unsigned long mul_32(unsigned int a,unsigned int b)
+  21          {
+  22   1        clac_mid.us16[0] = a;        
+  23   1        mid_1 = clac_mid.us8[1];    
+  24   1        EXA   = clac_mid.us8[0];
+  25   1        
+  26   1        clac_mid.us16[0] = b;        
+  27   1        mid_2 = clac_mid.us8[1];    
+  28   1        EXB   = clac_mid.us8[0];
+  29   1        
+  30   1        AUX2 = (AUX2&0xf6)|0x1;
+  31   1      
+  32   1        clac_mid.tt.us12 = mid_1*mid_2;
+  33   1        clac_mid.tt.us3 = EXA;
+  34   1        clac_mid.tt.us0 = EXB;
+  35   1        AUX2 = (AUX2&0xf6);
+  36   1        return clac_mid.us32;
+  37   1      }
+  38          
+  39          /*-------------------------------------------------------------------------
+  40            16bit 无符号数   除以  16bit无符号数 
+  41            返回结果为 16bit无符号数
+  42            -------------------------------------------------------------------------*/
+  43          unsigned int div_16(unsigned int a, unsigned int b)
+  44          {
+  45   1      //  calc_mid_t clac_mid;
+  46   1      //  unsigned char mid_1,mid_2;
+  47   1      
+  48   1        clac_mid.us16[0] = a;            
+  49   1        mid_1 = clac_mid.us8[1];          
+  50   1        EXA = clac_mid.us8[0];  
+  51   1        clac_mid.us16[0] = b;            
+  52   1        mid_2 = clac_mid.us8[1];          
+  53   1        EXB = clac_mid.us8[0];
+C51 COMPILER V9.60.7.0   TM52F1376_CALC_BSP                                                09/25/2024 11:06:14 PAGE 2   
+
+  54   1        
+  55   1        AUX2 = (AUX2&0xf6)|0x1;      
+  56   1        clac_mid.us8[0] = mid_1/mid_2;       
+  57   1        clac_mid.us8[1] = EXA;
+  58   1        AUX2 = (AUX2&0xf6);
+  59   1        return clac_mid.us16[0];      
+  60   1      }
+  61           
+  62          /*-------------------------------------------------------------------------
+  63            32bit 无符号数   除以  16bit无符号数 
+  64            返回结果为 32bit无符号数
+  65            -------------------------------------------------------------------------*/
+  66          unsigned long div_32(unsigned long a,unsigned int b)
+  67          {
+  68   1      //  calc_mid_t clac_mid;
+  69   1      //  unsigned char mid_1,mid_2;
+  70   1      
+  71   1        clac_mid.us32 = a;       
+  72   1        mid_1 = clac_mid.us8[3];       
+  73   1        EXA = clac_mid.us8[2];             
+  74   1        EXA2 = clac_mid.us8[1];          
+  75   1        EXA3 = clac_mid.us8[0];       
+  76   1        clac_mid.us16[0] = b;            
+  77   1        mid_2 = clac_mid.us8[1];          
+  78   1        EXB = clac_mid.us8[0];       
+  79   1        AUX2 = (AUX2&0xf6)|0x9; 
+  80   1                     
+  81   1        clac_mid.us8[0] = mid_1/mid_2;
+  82   1        
+  83   1        clac_mid.us8[1] = EXA;       
+  84   1        clac_mid.us8[2] = EXA2;      
+  85   1        clac_mid.us8[3] = EXA3;            
+  86   1        AUX2 = (AUX2&0xf6); 
+  87   1        return clac_mid.us32;      
+  88   1      }
+  89          
+  90          unsigned int mod_32(unsigned long a,unsigned int b)
+  91          {
+  92   1        clac_mid.us32 = a;       
+  93   1        mid_1 = clac_mid.us8[3];       
+  94   1        EXA = clac_mid.us8[2];             
+  95   1        EXA2 = clac_mid.us8[1];          
+  96   1        EXA3 = clac_mid.us8[0];       
+  97   1        clac_mid.us16[0] = b;            
+  98   1        mid_2 = clac_mid.us8[1];          
+  99   1        EXB = clac_mid.us8[0];       
+ 100   1        AUX2 = (AUX2&0xf6)|0x9; 
+ 101   1                     
+ 102   1        clac_mid.us8[0] = mid_1%mid_2;  
+ 103   1        clac_mid.us8[1] = EXB;       
+ 104   1      //  clac_mid.us8[2] = EXA2;      
+ 105   1      //  clac_mid.us8[3] = EXA3;            
+ 106   1        AUX2 = (AUX2&0xf6); 
+ 107   1        return clac_mid.us16[0];       
+ 108   1      }
+ 109          
+ 110          
+ 111          
+ 112          
+ 113          
+ 114          
+ 115          
+C51 COMPILER V9.60.7.0   TM52F1376_CALC_BSP                                                09/25/2024 11:06:14 PAGE 3   
+
+ 116          
+ 117          
+ 118          
+ 119          
+ 120          
+ 121          
+ 122          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    397    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      6      12
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

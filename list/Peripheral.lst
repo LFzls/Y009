@@ -1,0 +1,276 @@
+C51 COMPILER V9.60.7.0   PERIPHERAL                                                        09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE PERIPHERAL
+OBJECT MODULE PLACED IN .\out\Peripheral.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\Peripheral.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\inc;.\D
+                    -rivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\Peripheral.lst) TABS(2) OBJECT(.\out\Peripheral.obj)
+
+line level    source
+
+   1          #include "inc/Global.h"
+   2          /*--------------------------------------------------------------*/
+   3          void PwmInitialize(void)
+   4          {
+   5   1      //  PWM_HIGH;
+   6   1      //  PWM2_HIGH;
+   7   1        P2 |= 0x0C; //0000 1100 P2µÚ2Î»ºÍµÚ3Î»ÉèÖÃÎª1,ÆäËûÎ»²»±ä
+   8   1        PORTIDX = 2;
+   9   1        PINMOD32 = 0x66;//(PINMOD32 & 0x0f) | 0x60;   //P2.2,3 is P.P. output.
+  10   1                //µÈÐ§Îª£ºPINMOD32 =  PINMOD32 & 0x00 | PIN_H_Mode_PP | PIN_L_Mode_PP;
+  11   1      //  PINMOD54 = (PINMOD32 & 0xf0) | 0x06;  //P2.4 is P.P. output.
+  12   1      }
+  13          /*--------------------------------------------------------------*/
+  14          void PortInitialize(void)
+  15          {
+  16   1        //LedPComHighR();
+  17   1      
+  18   1        //LED1~4
+  19   1        //LED :0 ,ADC:Ä¬ÈÏ£¬¿ÉÉèÎª1£¬MIC£º0£¬KEY£º1£¬PWM£¨PMOS£©£º1£¨¹Ø),CC1,CC2:Ä¬ÈÏ£¬¿ÉÉèÎª1
+  20   1        P0 = 0X7b;      //01111011
+  21   1        PORTIDX = 0;    //PORT1
+  22   1        PINMOD76 = (PINMOD76 & 0x00) | PIN_H_MODE_OD | PIN_L_MODE_PP;   //       PWM2
+  23   1        PINMOD54 = (PINMOD54 & 0x00) | PIN_H_MODE_PP | PIN_L_MODE_PP;   //N1    N2
+  24   1        PINMOD32 = (PINMOD32 & 0x00) | PIN_H_MODE_PP | PIN_L_MODE_PP; //N3    CON1
+  25   1        PINMOD10 = (PINMOD10 & 0x00) | PIN_H_MODE_OD | PIN_L_MODE_OD;   //CCL1  CCL2  (Ðè¼Ó´øµçÉý¼¶)  Òª²»Òª¼Ó»½Ð
+             -Ñ£¿£¿
+  26   1        PINMOD |= (HSNK0EN | HSNK1EN);
+  27   1      
+  28   1        // P0 &= ~0x30;          //Ð»¹¤ÅäÖÃ
+  29   1        // P0 |= 0xc0;
+  30   1        // PORTIDX = 0;   //PORT0                            
+  31   1        // PINMOD54 = 0x66; //P0.4,5 is P.P. output.
+  32   1        // PINMOD76 = (PIN_H_MODE_OD | PIN_L_MODE_OD_WAKEUP);//P0.7,P0.6
+  33   1        
+  34   1        P1 = 0x00;
+  35   1        PORTIDX = 1;    //PORT1
+  36   1        PINMOD76 = (PINMOD76 & 0x00) |PIN_H_MODE_OD | PIN_L_MODE_OD;  //L7
+  37   1        PINMOD54 = (PINMOD54 & 0x00) |PIN_H_MODE_OD | PIN_L_MODE_OD;
+  38   1        PINMOD32 = (PINMOD32 & 0x00) |PIN_H_MODE_OD | PIN_L_MODE_OD;
+  39   1        PINMOD10 = (PINMOD10 & 0x00) |PIN_H_MODE_OD | PIN_L_MODE_OD;    //    L6
+  40   1        
+  41   1        P2 = 0x0C;      //00001100
+  42   1        PORTIDX = 2;    //PORT2
+  43   1        PINMOD76 = (PINMOD76 & 0x00) |PIN_H_MODE_OD | PIN_L_MODE_OD;
+  44   1        PINMOD54 = (PINMOD54 & 0x00) |PIN_H_MODE_ADC| PIN_L_MODE_ADC;   //ADC2   ADC1
+  45   1        PINMOD32 = (PINMOD32 & 0x00) |PIN_H_MODE_PP | PIN_L_MODE_OD_WAKEUP;  //PWM PMOS DC5VIN(ÒªÇó¸ßµçÆ½»½ÐÑ)   
+  46   1        PINMOD10 = (PINMOD10 & 0x00) |PIN_H_MODE_OD | PIN_L_MODE_OD;    //L2  L1
+  47   1      
+  48   1        P3 = 0x03;             //00000011
+  49   1        PORTIDX = 3;    //PORT3
+  50   1        PINMOD76 = (PINMOD76 & 0x00) | PIN_H_MODE_OD | PIN_L_MODE_OD;   //L3    L4
+  51   1        PINMOD54 = (PINMOD54 & 0x00) | PIN_H_MODE_OD | PIN_L_MODE_OD;   //L5
+  52   1        PINMOD32 = (PINMOD32 & 0x00) | PIN_H_MODE_PP | PIN_L_MODE_OD;   //En_CHGR(³äµçÊ¹ÄÜ)
+  53   1        PINMOD10 = (PINMOD10 & 0x00) | (PIN_H_MODE_OD_IPD_WAKEUP | PIN_L_MODE_OD);    //MIC£¨ÒªÇó¸ßµçÆ½»½ÐÑ£©²ÎÕÕ
+C51 COMPILER V9.60.7.0   PERIPHERAL                                                        09/25/2024 11:06:14 PAGE 2   
+
+             -¹æ¸ñÊé£¬±ØÐëÀ­¸ß  KEY£¨ÒªÇóµÍµçÆ½»½ÐÑ)
+  54   1        
+  55   1        VBGEN_ENABLE;
+  56   1        CHRG_ENABLE;
+  57   1        PDOWN_LVD_ENABLE;
+  58   1        LVRPD = 1;
+  59   1        
+  60   1      }
+  61          /*----------------------------------------------------------------------------*/
+  62          /*----------------------------------------------------------------------------*/
+  63          /*--------------------------------------------------------------*/
+  64          void Timer0_Init(void)
+  65          {
+  66   1        TMOD = (TMOD &(~0x0F)) | 0x01;
+  67   1        TH0 = TIME_RELOAD/256;
+  68   1        TL0 = TIME_RELOAD%256;
+  69   1        
+  70   1      //    TH0 =(65536 - 9216 )/256;   // 1000US
+  71   1      //    TL0 =(65536 - 9216 )%256;
+  72   1        
+  73   1          TF0 = 0;
+  74   1          TR0 = 1;                    // TIMER0 ÔËÐÐ
+  75   1          ET0 = 1;                    // Interrupt enable   //Timer0 ÖÐ¶ÏÊ¹ÄÜ
+  76   1      }
+  77          /*----------------------------------------------------------
+  78            enState->Bit[7:6]:WDT_EN -> WDT Enable Control
+  79                     0xC0:11->WDT Always Enable
+  80                     0x80:10->WDT Enable in Fast/Slow, Disable in Idle/Stop mode
+  81                     0x00:0x->WDT Disable  
+  82            ----------------------------------------------------------*/
+  83          void WDG_Init(void)
+  84          {
+  85   1      //  OPTION = (OPTION & ~OPTION_WDTPSC_MASK) | ClkPsc;      //240MS
+  86   1      //  AUX2   = (AUX2   & ~AUX2_WDTE_MASK) | 0xc0;       // ¿´ÃÅ¹·¶¨Ê±Æ÷¸´Î»ÓÚ¿ìÖÓ/ÂýÖÓÄ£Ê½ÏÂÊ¹ÄÜ,¿ÕÏÐ/Í£Ö¹Ä£Ê½Ê
+             -±½ûÖ¹
+  87   1        WDT_RUN_FAST_DIS_ILDE;//
+  88   1        CLRWDT = 1;
+  89   1      }
+  90          /*--------------------------------------------------------------*/
+  91          void Lvd_Initialize(void)  
+  92          {
+  93   1        INTFLG &= ~LVDIF; //CLEAR LVDIF
+  94   1        LVDS = 0x04;  //Enable LVD and lvd_voltage 2.61v
+  95   1        INTE1 |= LVDIE; 
+  96   1      }
+  97          void Lvd_Interrupt(void) interrupt 9   //Ç·Ñ¹ÖÐ¶Ï
+  98          {
+  99   1        INTFLG &= ~LVDIF; //CLEAR LVDIF
+ 100   1        if(MainState==MainSmoke)    
+ 101   1        {
+ 102   2          StopOutput();
+ 103   2          SetLoadSC;
+ 104   2          SetLoad2SC;
+ 105   2      //    if(bSmokeOut==1) { SetLoadSC;}
+ 106   2      //    if(bSmokeOut2==1) { SetLoad2SC;}  //¸ÄÎªÉÏÃæµÄ
+ 107   2        }
+ 108   1      }
+ 109          /*--------------------------------------------------------------*/
+ 110          void PortInt() interrupt  8
+ 111          {
+ 112   1        unsigned char PortBuffer=0;
+ 113   1        PortBuffer = PORTIDX;
+C51 COMPILER V9.60.7.0   PERIPHERAL                                                        09/25/2024 11:06:14 PAGE 3   
+
+ 114   1        if((INTFLG&PCIF)==PCIF)               //PORT¿Ú±ä»¯ÖÐ¶Ï
+ 115   1        {
+ 116   2           if((INTPORT&P0IF)==P0IF)           //PORT0.XµçÆ½±ä»¯
+ 117   2           {
+ 118   3             PORTIDX = 0;
+ 119   3               if((INTPIN&PIN6IF)==PIN6IF)  //P06,USB
+ 120   3             {
+ 121   4               INTPIN&=~PIN6IF;
+ 122   4             }
+ 123   3             INTPORT&=~P0IF;
+ 124   3           }
+ 125   2           if((INTPORT&P3IF)==P3IF)           //PORT3.XµçÆ½±ä»¯
+ 126   2           {
+ 127   3             PORTIDX = 3;
+ 128   3               if((INTPIN&PIN0IF)==PIN0IF)  //P30,KEY
+ 129   3             {
+ 130   4               INTPIN&=~PIN0IF;
+ 131   4             }
+ 132   3               if((INTPIN&PIN1IF)==PIN1IF)  //P31,MIC
+ 133   3             {
+ 134   4               INTPIN&=~PIN1IF;
+ 135   4             }
+ 136   3             INTPORT&=~P3IF;
+ 137   3           }
+ 138   2           INTFLG&=~PCIF;
+ 139   2        }
+ 140   1        PORTIDX = PortBuffer;
+ 141   1      }
+ 142          /*----------------------------------------------------------*/
+ 143          void PWM_Int() interrupt 14
+ 144          {
+ 145   1        
+ 146   1      }
+ 147          /*------------------------------------------------------------*/
+ 148          void Timer0_Int() interrupt 1
+ 149          {
+ 150   1      //  TH0 =(65536 - 9216 )/256;   // 100US
+ 151   1      //  TL0 =(65536 - 9216 )%256;
+ 152   1        TH0 = TIME_RELOAD/256;
+ 153   1        TL0 = TIME_RELOAD%256;
+ 154   1      
+ 155   1        Time10mSCnt++;
+ 156   1        if(Time10mSCnt >= 100)//10ms
+ 157   1        {
+ 158   2      //    P1_5 ^= 1;
+ 159   2      //    P1_2 ^= 1;
+ 160   2      
+ 161   2          Time10mSCnt = 0;
+ 162   2          bTime10mS = 1;
+ 163   2          bTimeBat = 1;
+ 164   2          DelayState ++;
+ 165   2          TimeDelaymS ++;
+ 166   2          if(MainState==MainSmoke) SmokeTime++;
+ 167   2          Time100mSCnt++;
+ 168   2          if(Time100mSCnt >= 10)
+ 169   2          {
+ 170   3            Time100mSCnt = 0;
+ 171   3            bTime100mS = 1;
+ 172   3            
+ 173   3            if(MainState==MainSmoke)
+ 174   3            {
+ 175   4              PuffTime++;
+C51 COMPILER V9.60.7.0   PERIPHERAL                                                        09/25/2024 11:06:14 PAGE 4   
+
+ 176   4              
+ 177   4              if(SmokeMode ==1)
+ 178   4              {
+ 179   5                SmokeTimeCnt1++;
+ 180   5                if(SmokeTimeCnt1 > OilTimeMax1) {SmokeTimeCnt1 = OilTimeMax1;}
+ 181   5              }
+ 182   4              else if(SmokeMode ==2)
+ 183   4              {
+ 184   5                SmokeTimeCnt2++;
+ 185   5                if(SmokeTimeCnt2 > OilTimeMax2) {SmokeTimeCnt2 = OilTimeMax2;}
+ 186   5              }
+ 187   4              else
+ 188   4              {
+ 189   5                SmokeTimeCnt++;
+ 190   5                if(SmokeTimeCnt > OilTimeMax) {SmokeTimeCnt = OilTimeMax;}
+ 191   5              }       
+ 192   4            }
+ 193   3          }
+ 194   2        }
+ 195   1      //  /*
+ 196   1        if(MainState==MainSmoke)
+ 197   1        {
+ 198   2          if(bSmokeOut==1)
+ 199   2          {
+ 200   3            PwmPeriodCnt++;
+ 201   3            if(PwmPeriodCnt>=PwmDutyMax)  {PwmPeriodCnt=0;}
+ 202   3            if(PwmPeriodCnt == 15) {bOutCheck=1;}
+ 203   3            if(PwmPeriodCnt == 30) {bBatCheck=1;}
+ 204   3          }
+ 205   2          else {PwmHigh;}
+ 206   2        #if(TwoLoadForT == 1)
+ 207   2          if(bSmokeOut2==1)
+ 208   2          {
+ 209   3            Pwm2PeriodCnt++;
+ 210   3            if(Pwm2PeriodCnt>=PwmDutyMax) {Pwm2PeriodCnt=0;}
+ 211   3            if(Pwm2PeriodCnt == 15) {bOut2Check=1;}
+ 212   3            if(Pwm2PeriodCnt == 30) {bBatCheck=1;}
+ 213   3          }
+ 214   2          else {Pwm2High;}
+ 215   2        #endif
+ 216   2        }
+ 217   1      //  */
+ 218   1        LedRenewDelay++;
+ 219   1        LedPRenewDelay++;
+ 220   1        
+ 221   1        #if(LedPForT == 1)
+ 222   1        LedPScan();
+ 223   1        #endif
+ 224   1        
+ 225   1        #if(LedBreatheForT == 1)
+ 226   1      //  LedBreathe();
+ 227   1        #endif
+ 228   1        
+ 229   1      }
+ 230          /*--------------------------------------------------------------*/
+ 231          void DelayNuS(unsigned int cnt)
+ 232          {
+ 233   1        unsigned int i;
+ 234   1      //  unsigned char delay_cnt;
+ 235   1        for(i = 0;i<cnt;i++)
+ 236   1        {
+ 237   2          _nop_();_nop_();_nop_();_nop_();_nop_();
+C51 COMPILER V9.60.7.0   PERIPHERAL                                                        09/25/2024 11:06:14 PAGE 5   
+
+ 238   2        }
+ 239   1      }
+ 240          /*--------------------------------------------------------------*/
+ 241          //
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    672    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,174 @@
+C51 COMPILER V9.60.7.0   FANFUNCTION                                                       07/19/2024 17:31:56 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE FANFUNCTION
+OBJECT MODULE PLACED IN .\obj\FanFunction.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\FanFunction.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Drivers\inc;.\
+                    -Drivers\src;.\src;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\FanFunction.lst) TABS(2) OBJECT(.\obj\FanFunction.obj)
+
+line level    source
+
+   1          #include  "Global.H"
+   2          /*-------------------------------------------------------------------------*/
+   3          uint8_t   FanState,FanStateFlag,FanSwitchOnOff,FanCnt;
+   4          uint16_t  FanFBVoltage,FanStateDelay,FanFBCounter;
+   5          
+   6          /*-------------------------------------------------------------------------*/
+   7          /*--------------------------------------------------------------*/
+   8          ///*
+   9          void FanTurnOn(void)
+  10          {
+  11   1        FanCtrlOn;
+  12   1        FanSwitchOnOff=1;
+  13   1        if(FanState==0x00)
+  14   1        {
+  15   2          FanFBCounter=0;
+  16   2          FanStateDelay=0;
+  17   2          FanState = FanStateOn;
+  18   2        }
+  19   1      }
+  20          void FanTurnOff(void)
+  21          {
+  22   1        FanCtrlOff;
+  23   1        FanSwitchOnOff=0;
+  24   1        if(FanState!=0x00)
+  25   1        {
+  26   2          FanFBCounter=0;
+  27   2          FanStateDelay=0;
+  28   2          FanState = FanStateOff;
+  29   2        }
+  30   1      }
+  31          //*/
+  32          /*--------------------------------------------------------------*/
+  33          /*
+  34          void CheckFanState(void)
+  35          {
+  36            //FanState=FanStateOn;
+  37            //return;
+  38            if(FanSwitchOnOff==0) return;
+  39            if(FanFBInPin == 1)
+  40            {
+  41              if(FanStateFlag==0)
+  42              {
+  43                FanStateFlag=1;
+  44                FanFBCounter++;
+  45              }
+  46            }
+  47            else
+  48            {
+  49              if(FanStateFlag==1)
+  50              {
+  51                FanStateFlag=0;
+  52                FanFBCounter++;
+  53              }
+  54            }
+C51 COMPILER V9.60.7.0   FANFUNCTION                                                       07/19/2024 17:31:56 PAGE 2   
+
+  55            if(FanStateDelay>1000)
+  56            {
+  57              FanStateDelay=0;
+  58              if(FanFBCounter>100)    { FanFBCounter=0; }
+  59              else  { FanState=FanStateError; FanFBCounter=0;   }
+  60            }
+  61            else if(FanFBCounter>200)
+  62            {
+  63              FanStateDelay=0;
+  64              FanFBCounter=0;
+  65              FanState=FanStateOn;
+  66            }
+  67          //  FanState=FanStateOn;
+  68          }
+  69          //*/
+  70          /*--------------------------------------------------------------*/
+  71          /*
+  72          void FanTurnOn(void)
+  73          {
+  74            FanCtrlOn;
+  75            FanSwitchOnOff=1;
+  76            FanFBCounter=0;
+  77            FanCnt=0;
+  78            FanStateDelay=0;
+  79            FanState = FanStateOn;
+  80          }
+  81          void FanTurnOff(void)
+  82          {
+  83            FanCtrlOff;
+  84            FanSwitchOnOff=0;
+  85            FanFBCounter=0;
+  86            FanCnt=0;
+  87            FanStateDelay=0;
+  88            FanState = FanStateOff;
+  89          }
+  90          */
+  91          /*--------------------------------------------------------------*/
+  92          ///*
+  93          void CheckFanState(void)
+  94          {
+  95   1        uint32_t  m;
+  96   1        if(FanSwitchOnOff==0) {FanStateDelay=0;return;}
+  97   1        m=(uint32_t)ADCModule(FanFBChannel,20);
+  98   1        m *= 5000;//1mv
+  99   1        m /=4095;
+ 100   1      //  m /=1;  //15
+ 101   1        if(FanState==FanStateOn)
+ 102   1        {
+ 103   2          if(m>FanNGCurValue || m<FanNCCurValue)
+ 104   2          {
+ 105   3            if(FanStateDelay>=1500)
+ 106   3            {
+ 107   4              FanState=FanStateError;
+ 108   4              FanStateDelay=0;
+ 109   4              FanFBCounter=0;
+ 110   4            }
+ 111   3          }
+ 112   2          else FanStateDelay=0;
+ 113   2        }
+ 114   1        else if(FanState==FanStateError)
+ 115   1        {
+ 116   2          
+C51 COMPILER V9.60.7.0   FANFUNCTION                                                       07/19/2024 17:31:56 PAGE 3   
+
+ 117   2          if(m<FanOKCurValue && m>FanNCCurValue)
+ 118   2          {
+ 119   3            FanFBCounter++;
+ 120   3            if(FanFBCounter>=500)
+ 121   3            {
+ 122   4              FanState=FanStateOn;
+ 123   4              FanStateDelay=0;
+ 124   4              FanFBCounter=0;
+ 125   4            }
+ 126   3          }
+ 127   2          else {FanStateDelay=0;FanFBCounter=0;}
+ 128   2        }
+ 129   1      //  FanState=FanStateOn;
+ 130   1      }
+ 131          //*/
+ 132          /*--------------------------------------------------------------*/
+ 133          
+ 134          /*--------------------------------------------------------------*/
+ 135          
+ 136          
+ 137          
+ 138          
+ 139          
+ 140          
+ 141          
+ 142          
+ 143          
+ 144          
+ 145          
+ 146          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    345    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     10       4
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

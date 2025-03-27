@@ -1,0 +1,295 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\out\main.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\main.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\inc;.\Drivers
+                    -\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\main.lst) TABS(2) OBJECT(.\out\main.obj)
+
+line level    source
+
+   1          /**
+   2          ******************************************************************************
+   3          * @file    main.c
+   4          * @brief   MAIN Source File.
+   5          ******************************************************************************
+   6          */
+   7          #include "inc/Global.h"
+   8          /*--------------------------------------------------------------*/
+   9          /*--------------------------------------------------------------*/
+  10          
+  11          uint8_t data MainState,StateStep;
+  12          uint8_t data OilPercent,OilLevel;
+  13          uint8_t data  FlagSmoke0,FlagSmoke1;
+  14          uint32_t data StoreFlag;
+  15          uint16_t data  SmokeTimeCnt;
+  16          uint16_t data  SmokeTimeCnt1;
+  17          uint16_t data  SmokeTimeCnt2;
+  18          uint16_t data  Ref1V2;
+  19          
+  20          
+  21          //Time_TypeDef   data TimeCnt;
+  22          uint8_t  data  dataTimeBase;     //Inc 100uS
+  23          uint8_t  data  Time10mSCnt; //Inc 100uS
+  24          uint8_t  data  Time100mSCnt; //Inc 10mS
+  25          
+  26          uint8_t  data  PuffTime;      //Inc 100mS
+  27          uint16_t data  SmokeTime;     //Inc 100mS
+  28          uint16_t data  TimeDelaymS;   //Inc 10mS
+  29          uint16_t data DelayState;
+  30          
+  31          ByteBit data TimeFlag;
+  32          ByteBit data SysInfoFlag;
+  33          ByteBit data LoadInfoFlag;
+  34          
+  35          /*--------------------------------------------------------------*/
+  36          void main()
+  37          { 
+  38   1        PwmInitialize();
+  39   1        Bsp_FastClock_Init(3);//SYSCLKPSC_Div1);  
+  40   1        Bsp_delay_100us(10);  
+  41   1        OPTION = (0x40 | WdtClkPsc_0| AdcClkPsc_8);
+  42   1        PortInitialize();
+  43   1        AdcInitialize();
+  44   1        Lvd_Initialize();
+  45   1        Timer0_Init();
+  46   1        WDG_Init(); //240MS
+  47   1        MicIni();
+  48   1      //  KeyIni();
+  49   1      //  bKeyEnable =1;
+  50   1        bBatOD=0; bBatLow = 0;  //?
+  51   1        LowBatCounter = 0; BatODCounter = 0;
+  52   1        EA=1;
+  53   1        /*-------------------------------------------*/
+  54   1        
+C51 COMPILER V9.60.7.0   MAIN                                                              09/25/2024 11:06:14 PAGE 2   
+
+  55   1        //------------------------------------
+  56   1      #if(DebugForT==0)
+  57   1        if((FlagSmoke0 == 0xA5) && (FlagSmoke1 == 0x5A))
+  58   1        {
+  59   2          FlagSmoke0 = 0x00;
+  60   2          FlagSmoke1 = 0x00;
+  61   2          if(StoreFlag != 0x5AA5)
+  62   2          {
+  63   3            StoreFlag = 0x5AA5;
+  64   3            SmokeTimeCnt = 0;
+  65   3            SmokeTimeCnt1 = 0;
+  66   3            SmokeTimeCnt2 = 0;
+  67   3          }
+  68   2          LEDP_LOADSC;
+  69   2          IniWarningMode();
+  70   2        }
+  71   1        else
+  72   1        {   
+  73   2          IniMainPowerOn();   //->LEDP_ALLON  , MainState = MainPowerOn
+  74   2        }
+  75   1        #endif
+  76   1        /*--------------------------------------*/
+  77   1      /*--------------------------------------------------------------*/
+  78   1      //  /*
+  79   1      #if(DebugForT==1)
+                bBatOD=0; bBatLow = 0;
+                SmokeTimeCnt = 0;
+                SmokeTimeCnt1 = 0;
+                SmokeTimeCnt2 = 0;
+                ChargeStep=1;
+                ChargeTime=0;
+                bHeat=0;
+                SmokeMode = 1;
+                MicIni();
+                //KeyIni();
+              //  LEDP_SCREENON;//
+                LEDP_STANDBY;//LEDP_ALLON;//LEDP_DEBUG;//LEDP_CHARGE;//LEDP_BATLOW;//LEDP_LOADNC;//LEDP_SMOKING;//LEDP_TU
+             -RNON;//LEDP_TURNOFF;//LEDP_SMOKEOVER;//LEDP_SMOKING;//
+                DelayState=0; 
+                ReadBatteryVoltage();
+                CalBatPercent(BatVolValue);
+                CalBatLevel();
+                CalOilPercent();
+                CalOilLevel();
+                SmokeTime = 0;
+                MainState = MainDebug;
+              //  IniSmokeMode();
+                    OutputOn;
+                    Output2On;
+                
+                while(1)
+                {
+                  CLR_WDT;
+              
+                  LedPController();
+                  
+                  if (bTime10mS == 1)
+                  {
+                    bTime10mS =0 ;
+                    
+              //      KeyScan();
+              //      MicScan();
+C51 COMPILER V9.60.7.0   MAIN                                                              09/25/2024 11:06:14 PAGE 3   
+
+              //      CheckUsbState();
+                  }
+                  if(TimeDelaymS >= 100)
+                  {
+                  
+                    TimeDelaymS =0;   
+                 AdOutValue=ReadAdResult(AD_VolChannel);
+                 AdOut2Value=ReadAdResult(AD_Vol2Channel);
+                    CLR_WDT;
+                  }
+                }
+                #endif
+ 128   1      //  */
+ 129   1      /*--------------------------------------------------------------*/
+ 130   1        /*-------------------------------------------------------------------------------------------*/
+ 131   1        #if(DebugForT==0)
+ 132   1        while(1)
+ 133   1        {
+ 134   2          CLR_WDT;
+ 135   2          LedPController();
+ 136   2          if (bTime10mS == 1)
+ 137   2          {
+ 138   3            bTime10mS =0;
+ 139   3            if(MainState!=MainPowerOn)
+ 140   3            {
+ 141   4              MicScan();
+ 142   4            //  KeyScan();
+ 143   4              #if(SwitchTorF == 1)
+ 144   4              SwitchScan();
+ 145   4              #endif
+ 146   4              CheckUsbState();
+ 147   4            }
+ 148   3            if(MainState!=MainSmoke &&  MainState!=MainPowerOn && MainState!=MainTurnOff)   //
+ 149   3            {
+ 150   4              ReadBatteryVoltage();
+ 151   4              CheckBatteryState();
+ 152   4              CheckBatODState();
+ 153   4            }
+ 154   3          }
+ 155   2          /*-----------------------------------------------*/
+ 156   2          switch(MainState)
+ 157   2          {
+ 158   3            /*-----------------------------------------------------------------------*/
+ 159   3            case MainPowerOn:   //ио╣Г
+ 160   3            {
+ 161   4                MainPoweronFunction();
+ 162   4                break;
+ 163   4            }
+ 164   3            case MainStandby:
+ 165   3            {
+ 166   4                MainStandbyFunction();
+ 167   4                break;
+ 168   4            }
+ 169   3            #if(PreHeatForT == 1)
+                    case MainPreHeat:
+                    {
+                        MainPreHeatFunction();
+                        break;
+                    }
+                    #endif
+ 176   3            case MainSmoke:
+ 177   3            {
+C51 COMPILER V9.60.7.0   MAIN                                                              09/25/2024 11:06:14 PAGE 4   
+
+ 178   4            
+ 179   4                MainSmokeMode();
+ 180   4                break;
+ 181   4            }
+ 182   3            case MainWarning:
+ 183   3            {
+ 184   4                MainWarningFunction(); 
+ 185   4                break;
+ 186   4            }
+ 187   3            case MainCharge:
+ 188   3            {
+ 189   4                BatChargeFunction();
+ 190   4                if(bUsbOld==0)
+ 191   4                {
+ 192   5                    IniMainStandby();
+ 193   5                }
+ 194   4                break;
+ 195   4            }
+ 196   3            case MainOffCharge:
+ 197   3            {
+ 198   4                BatChargeFunction();      
+ 199   4                if(bUsbOld==0)
+ 200   4                {
+ 201   5                IniMainTurnOff();
+ 202   5                LEDP_ALLOFF;
+ 203   5                }
+ 204   4                break;
+ 205   4            }
+ 206   3            case MainSleep:
+ 207   3            {
+ 208   4              EnterSleep();
+ 209   4              DelayState = 0;
+ 210   4      //        if(KEY_FALSE) bKeyEnable =1;
+ 211   4              if(MIC_TRUE) {MainState = MainStandby;}
+ 212   4              //else if(KEY_TRUE) {IniMainStandby();}//LEDP_SCREENON; MainState = MainScreenOn;}
+ 213   4              else
+ 214   4              {
+ 215   5                IniMainStandby();
+ 216   5              }
+ 217   4                break;
+ 218   4            }
+ 219   3            /*--------------------------------------------------------------*/
+ 220   3            case MainTurnOn:
+ 221   3            {
+ 222   4              if(LedPMode == LedPStandby)
+ 223   4              {
+ 224   5                IniMainStandby();         
+ 225   5              }
+ 226   4            break;
+ 227   4            }
+ 228   3            /*--------------------------------------------------------------*/
+ 229   3            case MainTurnOff:
+ 230   3            {
+ 231   4              if(LedPMode!=LedPSolidOff) break;
+ 232   4                if(DelayState>300)
+ 233   4                {
+ 234   5                    EnterSleep(); 
+ 235   5                    DelayState = 0;       
+ 236   5                }
+ 237   4                if(bUsbOld)
+ 238   4                {
+ 239   5                  IniChargeMode();
+C51 COMPILER V9.60.7.0   MAIN                                                              09/25/2024 11:06:14 PAGE 5   
+
+ 240   5                  MainState = MainOffCharge;
+ 241   5                }
+ 242   4                break;
+ 243   4            }
+ 244   3            /*--------------------------------------------------------------*/
+ 245   3            case MainScreenOn:
+ 246   3            {
+ 247   4              if(LedPMode == LedPStandby)
+ 248   4              {
+ 249   5                IniMainStandby();         
+ 250   5              }
+ 251   4                break;
+ 252   4            }
+ 253   3            /*-----------------------------------------------------------------------*/
+ 254   3            default:
+ 255   3            { break; }
+ 256   3          }
+ 257   2        }
+ 258   1        #endif
+ 259   1        /*--------------------------------------------------------------*/
+ 260   1      }
+ 261          
+ 262          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    415    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     31    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

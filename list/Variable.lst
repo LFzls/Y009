@@ -1,0 +1,45 @@
+C51 COMPILER V9.60.7.0   VARIABLE                                                          07/19/2024 17:53:23 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE VARIABLE
+OBJECT MODULE PLACED IN .\obj\Variable.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\Variable.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Drivers\inc;.\Dri
+                    -vers\src;.\src;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\Variable.lst) TABS(2) OBJECT(.\obj\Variable.obj)
+
+line level    source
+
+   1          
+   2          #include "Global.h"
+   3          
+   4          /*--------------------------------------------------------------*/
+   5          
+   6          //uint8_t CounterFanState,CapChargeState,DisChargeCounter;
+   7          //uint8_t   VinState,NtcState,VinCounter,NtcCounter,TempFlag;
+   8          //uint8_t   DisChgErrorCnt,CapChgDsgCnt;
+   9          //uint8_t   Cnt10mS;
+  10          //uint16_t  CounterOneS,AutoDelay;
+  11          //uint16_t  CounterS,StateDelay,RestTime,DelayCapChg;
+  12          //uint16_t  DelayStandby,DelayDataFlash,DelayDisCHG,DelayCapChgDsg;
+  13          //uint16_t  TempR0;
+  14          //uint32_t  FireCounter,AgingFireCounter;
+  15          /*--------------------------------------------------------------*/
+  16          //volatile ByteBit     MainFlag0,MainFlag1,MainFlag2;
+  17          
+  18          
+  19          
+  20          /*--------------------------------------------------------------*/
+  21          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

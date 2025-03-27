@@ -1,0 +1,104 @@
+C51 COMPILER V9.60.7.0   ADCFUNCTION                                                       09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE ADCFUNCTION
+OBJECT MODULE PLACED IN .\out\AdcFunction.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\AdcFunction.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\inc;.\
+                    -Drivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\AdcFunction.lst) TABS(2) OBJECT(.\out\AdcFunction.obj)
+
+line level    source
+
+   1          //module.c
+   2          //
+   3          #include "Global.h"
+   4          /*--------------------------------------------------------------*/
+   5          void AdcInitialize(void)
+   6          {
+   7   1        uint8_t TempR;
+   8   1        TempR = OPTION & 0xF3;
+   9   1        OPTION = (TempR | AdcClkPsc_32);
+  10   1        AUX3 = (AUX3&0xfc | 0x04);    //select vcc as ref, enable VBG.
+  11   1      }
+  12          /*--------------------------------------------------------------*/
+  13          uint16_t  ADCModule(uint8_t AdcChannel,uint8_t AdcNumber)
+  14          {
+  15   1      //  uint8_t TempR8;
+  16   1        uint16_t ADResult;  
+  17   1      //  OPTION = (OPTION & ~OPTION_ADCKS_MASK) | AdcClkPsc_8;//AdcClkPsc_16;   // ADC 时钟频率选择 Fsysclk/32 
+  18   1        ADCHS  = (ADCHS & 0xE0) | AdcChannel ;             // ADC Channel Select
+  19   1      //  AUX3   = (AUX3 & 0xFE) | 0x04 | ADC_Vref_VCC ;      // ADC 参考电压  vcc  
+  20   1      
+  21   1        ADResult = ADCRead(AdcNumber);
+  22   1        return ADResult;
+  23   1      }
+  24          /*----------------------------------------------------------------------------*/
+  25          /*----------------------------------------------------------------------------*/
+  26          uint16_t ReadAdResult(uint8_t AdcChannel)
+  27          {
+  28   1        uint16_t ad_temp;
+  29   1      //  OPTION = (OPTION &~ OPTION_ADCKS_MASK) | AdcClkPsc_8;//AdcClkPsc_16;   // ADC 时钟频率选择 Fsysclk/32 
+  30   1      //  ADCHS  = (ADCHS &~ ADCHS_MASK) | AdcChannel ;             // ADC Channel Select
+  31   1      //  AUX3   = AUX3=(AUX3&0xfc);//(AUX3 & ~AUX3_ADVREFS_MASK) | ADC_Vref_VCC ;      // ADC 参考电压  vcc  
+  32   1        ADCHS  = (ADCHS & 0xE0) | AdcChannel ;             // ADC Channel Select
+  33   1        AUX3   = (AUX3 & 0xFE) | 0x04 | ADC_Vref_VCC ;      // ADC 参考电压  vcc  
+  34   1        ADSOC = 1;                   // ADC Start      
+  35   1        while(ADSOC);                // wait ADC finish
+  36   1        ad_temp  = ADCDH<<4;  
+  37   1        ad_temp |= ADCDL >>4; 
+  38   1        return ad_temp;
+  39   1      }
+  40          /*----------------------------------------------------------------------------*/
+  41          uint16_t ADCRead(uint8_t AdcNumber)
+  42          {
+  43   1        uint8_t i;
+  44   1        uint16_t max, min, ad_temp,templ,temph;
+  45   1        uint32_t sum;
+  46   1          max = 0x00;
+  47   1          min = 0xfff;
+  48   1          sum = 0x00;
+  49   1          
+  50   1          for (i=0; i<2; i++)
+  51   1          {
+  52   2            ADSOC = 1;                
+  53   2            while(ADSOC);           
+  54   2            templ = ADCDL;
+C51 COMPILER V9.60.7.0   ADCFUNCTION                                                       09/25/2024 11:06:14 PAGE 2   
+
+  55   2            temph = ADCDH;         
+  56   2          } 
+  57   1          for (i=0; i<AdcNumber; i++)
+  58   1          {
+  59   2          ADSOC = 1;                
+  60   2          while(ADSOC);           
+  61   2          templ = ADCDL;
+  62   2          temph = ADCDH;         
+  63   2          ad_temp  = (temph<<4) &0xff0;
+  64   2          ad_temp  |= templ>>4;
+  65   2          if (ad_temp > max) { max = ad_temp;}
+  66   2          if (ad_temp < min) { min = ad_temp;}
+  67   2          sum += (uint32_t)ad_temp;
+  68   2          }
+  69   1          if(AdcNumber>2)
+  70   1          {
+  71   2            sum -= min;
+  72   2            sum -= max;
+  73   2            sum /= (AdcNumber-2);
+  74   2            ad_temp=(uint16_t)sum;
+  75   2          }
+  76   1          else { sum /= AdcNumber;ad_temp=(uint16_t)sum;}
+  77   1          return ad_temp;
+  78   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    608    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      16
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

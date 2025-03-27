@@ -1,0 +1,270 @@
+C51 COMPILER V9.60.7.0   KEY                                                               08/06/2024 17:23:08 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN .\obj\key.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\key.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\inc;.\Drivers\
+                    -src;.\src;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\key.lst) OBJECT(.\obj\key.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2           ** Function :  key.c
+   3           ******************************************************************************/
+   4          
+   5          /******************************************************************************
+   6           ** Include files
+   7           ******************************************************************************/
+   8          #include "Global.h"
+   9          /*----------------------------------------------*/
+  10          uint8_t MicScnCnt;
+  11          ByteBit MicInfoFlag;
+  12          void MicIni(void)
+  13          {
+  14   1              MicScnCnt = 0;
+  15   1              bMicNew = 0;
+  16   1              bMicOld = 0;
+  17   1      }
+  18          void MicScan(void)
+  19          {
+  20   1              if(MIC_TRUE) bMicNew =1;
+  21   1              else bMicNew = 0;
+  22   1              if(bMicNew == bMicOld) {MicScnCnt = 0;}
+  23   1              if(++MicScnCnt >= 3)
+  24   1              {
+  25   2                      MicScnCnt = 0;
+  26   2                      bMicOld = bMicNew;              
+  27   2              }
+  28   1      }
+  29          /*----------------------------------------------*/
+  30          uint8_t KeyScanCnt,KeyCounter;
+  31          uint16_t KeyDelayCnt,KeyCntDelay;
+  32          ByteBit KeyInfoFlag;
+  33          /*----------------------------------------------*/
+  34          #if(KeyTorF == 1)
+  35          
+  36          void KeyIni(void)
+  37          {
+  38   1              KeyScanCnt=0;
+  39   1              KeyCounter=0;
+  40   1              KeyDelayCnt=0;
+  41   1              KeyCntDelay=0;
+  42   1              bKeyNew = 0;
+  43   1              bKeyOld = 0;
+  44   1              bKeySmoke = 0;
+  45   1      }
+  46          void KeyScan(void)
+  47          {
+  48   1          KeyDelayCnt++;
+  49   1          KeyCntDelay++;
+  50   1              if(KEY_TRUE) bKeyNew = 1;
+  51   1              else bKeyNew = 0;
+  52   1              if(bKeyNew == bKeyOld)
+  53   1              {
+  54   2                      KeyScanCnt=0;
+C51 COMPILER V9.60.7.0   KEY                                                               08/06/2024 17:23:08 PAGE 2   
+
+  55   2                      if(bKeyOld==1 && (KeyDelayCnt > 30))
+  56   2                      {
+  57   3                      
+  58   3                        if(bSysOn == 0) bKeySmoke =1;
+  59   3                      }
+  60   2                      if(bKeyOld==1 && (KeyDelayCnt > 2000))
+  61   2                      {
+  62   3                        if(bUsbOld)
+  63   3                        {
+  64   4                            IniChargeMode();
+  65   4                            MainState = MainOffCharge;
+  66   4                        }
+  67   3                        else
+  68   3                        {
+  69   4                              KeyDelayCnt=0;
+  70   4      //                      LedPReset();
+  71   4      //                      EnterSleep();
+  72   4      //                      DelayState = 0;
+  73   4      //                      LEDP_ALLOFF;
+  74   4                              MainState = MainTurnOff;
+  75   4                        }
+  76   3                              return;
+  77   3                      }
+  78   2              }
+  79   1              #if(KeyCountForT==1)
+                      if(KeyCntDelay>300)
+                      {
+                              KeyCounter=0;
+                      }
+                      else if(KeyCntDelay<200)
+                      {
+                              if(bKeyOld==0 && (bSysOn == 0))
+                              {
+                                if(KeyDelayCnt>15)
+                                {
+                                  if(KeyCntDelay>185)
+                                  {
+                                    
+                                if(KeyCounter == 2)
+                                    {
+                                         KeyCntDelay = 0;
+                                         KeyDelayCnt = 0;
+                                         KeyCounter = 0;
+                                        if(MainState == MainStandby)
+                                        {
+              //                            DelayState = 0;
+                                            StateStep = 0;
+              //                            SetPreheat;
+              //                            MainState = MainPreHeat;
+                                        }
+                                    }
+                                if(KeyCounter == 3)
+                                    {
+                                        KeyCntDelay = 0;
+                                        KeyDelayCnt = 0;
+                                        KeyCounter = 0;
+              //                        DelayState = 0;
+              //                        if((MainState != MainTurnOff) && (MainState != MainOffCharge))
+              //                        {
+              //                            if(++SmokeMode > 2) SmokeMode =0;
+              //                            LEDP_STANDBY;
+              //                        }
+C51 COMPILER V9.60.7.0   KEY                                                               08/06/2024 17:23:08 PAGE 3   
+
+                                    }
+                                  }
+                                }
+                              }
+                      }
+                      #endif
+ 123   1          if(++KeyScanCnt >=5 )
+ 124   1              {
+ 125   2                      KeyScanCnt=0;
+ 126   2                      KeyDelayCnt=0;
+ 127   2      //              DelayState = 0;
+ 128   2                      bKeyOld = bKeyNew;
+ 129   2                      if(bKeyOld==1)
+ 130   2                      {
+ 131   3                              #if(KeyOnOffForT==1)
+                                  KeyCounter++;
+                                      if(KeyCounter == 1) KeyCntDelay = 0;
+                                      if(KeyCounter>=5)
+                                  {
+                                               KeyCounter=0;
+                                               KeyCntDelay = 0;
+                                               if(bSysOn==0)//(MainState == MainTurnOff) || (MainState == MainOffCharge))
+                                               {
+                                                      IniMainTurnOn();
+                                               }
+                                               else
+                                               {
+                                                      if(bUsbOld)
+                                                      {
+                                                              IniChargeMode();
+                                                              MainState = MainOffCharge;
+                                                      }
+                                                      else  IniMainTurnOff();
+                                              }
+                                      }
+                                      #endif
+ 153   3                               if(MainState == MainStandby)
+ 154   3                               {
+ 155   4                                       if(++SmokeMode > 2) SmokeMode=0;
+ 156   4                                       DelayState=0;
+ 157   4                                       LEDP_STANDBY;                           
+ 158   4                               }
+ 159   3                      }
+ 160   2                      else
+ 161   2                      {
+ 162   3                        bKeySmoke = 0;
+ 163   3                      }
+ 164   2              }
+ 165   1      }
+ 166          #endif
+ 167          /*------------------------------------------*/
+ 168          #if(SwitchTorF==1)
+              uint8_t SwScanCnt;
+              uint8_t SwStateNew,SwStateOld;
+              
+              FlagBits_TypeDef SwInfoFlag;
+              void SwitchIni(void)
+              {
+                      SwScanCnt=0;
+                      bSwNew = 0;
+                      bSwOld = 0;
+              
+C51 COMPILER V9.60.7.0   KEY                                                               08/06/2024 17:23:08 PAGE 4   
+
+                  SwStateNew = 0;
+                      if(K1_TRUE) SwStateNew |= 0x01;
+                      if(K2_TRUE) SwStateNew |= 0x02;
+                      SwStateOld = SwStateNew;
+                      if(SwStateOld==1) FlavorMode=1;
+                      else if(SwStateOld==2) FlavorMode=0;
+                      else FlavorMode=2;
+                      
+              }
+              void SwitchScan(void)
+              {
+                  SwStateNew = 0;
+                      if(K1_TRUE) SwStateNew |= 0x01;
+                      if(K2_TRUE) SwStateNew |= 0x02;
+                      
+                      if(SwStateNew == SwStateOld)
+                      {
+                              SwScanCnt=0;
+                      }
+                      if(++SwScanCnt >=5)
+                      {
+                              SwScanCnt=0;
+              
+                              SwStateOld = SwStateNew;
+                              if(!bSysOn)//MainState == MainStandby)
+                              {
+                         if(SwStateOld==1) FlavorMode=1;
+                                 else if(SwStateOld==2) FlavorMode=0;
+                                  else FlavorMode=2;
+              //                  DelayState = 0;
+                                  if(bHeat==0) {LEDP_STANDBY;}
+                              }
+                      }
+              }
+              
+              
+              
+              #endif
+ 217          /******************************************************************************
+ 218           ** Global variable definitions (declared in header file with 'extern')
+ 219           ******************************************************************************/
+ 220          #if(KeyOnOffForT==1)
+              /*------------------------------------------*/
+              void IniMainTurnOn(void)
+              {
+                  bSysOn = 0;
+                  LEDP_STANDBY;
+                  DelayState = 0;
+                  MainState = MainStandby;
+              }
+              /*------------------------------------------*/
+              void IniMainTurnOff(void)
+              {
+                  bSysOn = 1;
+                  LEDP_ALLOFF;
+                  DelayState = 0;
+                  MainState = MainTurnOff;
+              }
+              #endif
+ 238          /*------------------------------------------*/
+
+
+C51 COMPILER V9.60.7.0   KEY                                                               08/06/2024 17:23:08 PAGE 5   
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    365    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      9    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

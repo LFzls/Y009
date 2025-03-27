@@ -1,0 +1,5 @@
+01. PROT (1:7)	Disable
+02. XRSTE (1:6)	Disable
+03. LVR (1:5~2)	LV Reset 2.05V
+06. IAP data reserve range (2:3~0)	No reserve range
+08. On Chip CRC16(2:5)	Disable

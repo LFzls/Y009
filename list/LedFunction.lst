@@ -1,0 +1,1144 @@
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LEDFUNCTION
+OBJECT MODULE PLACED IN .\out\LedFunction.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\LedFunction.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\inc;.\
+                    -Drivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\LedFunction.lst) TABS(2) OBJECT(.\out\LedFunction.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------*/
+   2          #include "Global.h"
+   3          /*--------------------------------------------------------------*/
+   4          
+   5          #if(LedForT==1)
+   6          uint8_t LedMode,LedModeBak,LedCounter;
+   7          uint8_t LedPeriod,LedDuty,LedDutyTime,LedScanT;
+   8          uint8_t LedPeriod1,LedDuty1;
+   9          uint8_t LedOffDelayCnt1;
+  10          uint8_t LedPeriod2,LedDuty2;
+  11          uint8_t LedOffDelayCnt2;
+  12          uint8_t LedRenewDelay,LedOffDelayCnt;
+  13          uint16_t LedDelayCnt;
+  14          ByteBit     LedFlag,LedFlag1;
+  15          uint8_t LedPStep1 = 0;
+  16          #endif
+  17          
+  18          uint8_t SBit,GBit;//QBit,BBit,
+  19          uint8_t LedPMode,LedPCounter,LedPStep,LedPRenewDelay;
+  20          uint8_t LedPScanT,LedPScanStep;
+  21          uint16_t LedPDelay;
+  22          ByteBit     LedPFlag;
+  23          #if(LedPComN<=8)
+  24          uint8_t LedPBufferData[LedPComN];
+  25          uint8_t LedPScanData[LedPComN];
+  26          #else
+              uint16_t LedPBufferData[LedPComN];
+              uint16_t LedPScanData[LedPComN];
+              #endif
+  30          
+  31          /*--------------------------------------------------------------*/
+  32          const uint8_t LedDigTab[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x00,0xff};  //0-9
+  33          //const uint8_t LedSBitTab[]={0x7e,0x48,0xba,0xda,0x5c,0xd6,0xf6,0x4a,0xfe,0xde,0x00,0xff};
+  34          //const uint8_t LedGBitTab[]={0x75,0x24,0x5c,0x6c,0x2d,0x69,0x79,0x24,0x7d,0x6d,0x00,0x7f};
+  35          //const uint16_t LedG1BitTab[]={0x100,0x000,0x100,0x100,0x000,0x100,0x100,0x100,0x100,0x100,0x00,0x100};
+  36          
+  37          /*--------------------------------------------------------------*/
+  38          void IniLedPBreathe(uint8_t LedPF)
+  39          {
+  40   1        if(LedPF==0)
+  41   1        {
+  42   2          bLedBreathe = 0;
+  43   2          bLedBreathe2 = 0;
+  44   2          bLedGrad =0;
+  45   2          return;
+  46   2        }
+  47   1        if(bLedBreathe==0)
+  48   1        {
+  49   2          LedDuty=0;
+  50   2          bDutyInc=1;
+  51   2          LedPeriod=0;
+  52   2          bLedBreathe =1; 
+  53   2        }
+  54   1        if(SmokeMode==0)
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 2   
+
+  55   1        {
+  56   2          bLedBreathe2 =0;
+  57   2          if(bLedGrad == 0)
+  58   2          {
+  59   3            bDuty1Inc =1;
+  60   3            LedPeriod1=0;
+  61   3            LedDuty1=0;
+  62   3            bLedGrad =1;
+  63   3          }
+  64   2        }
+  65   1        else
+  66   1        {
+  67   2          bLedGrad =0;
+  68   2          if(bLedBreathe2 == 0)
+  69   2          {
+  70   3            LedDuty2=BLNDuty;
+  71   3            bDuty2Inc=0;
+  72   3            LedPeriod2=0;
+  73   3            bLedBreathe2 =1;  
+  74   3          }
+  75   2        } 
+  76   1      }
+  77          
+  78          #if(LedForT==1)
+  79          void IniLedMode(uchar LMode,uchar FTimes)
+  80          {
+  81   1        if(LedMode==LMode) return;
+  82   1        bLedBreathe =0;
+  83   1        LedPeriod=0;
+  84   1        LedPeriod1=0;
+  85   1        LedPeriod2=0;
+  86   1        LedDutyTime=0;
+  87   1        if(LMode==LedGradOn || LMode==LedBreatheState
+  88   1          || LMode==LedSmoking || LMode==LedCharging
+  89   1          || LMode==LedScreenOn)
+  90   1        {
+  91   2          LedDuty=0;
+  92   2          bDutyInc=1;
+  93   2          LedDuty2=0;
+  94   2          bDuty2Inc=1;
+  95   2          bLedBreathe =1;
+  96   2        }
+  97   1        else if(LMode == LedGradOff)
+  98   1        {
+  99   2          LedDuty=BLNDuty;
+ 100   2          bDutyInc=0;
+ 101   2          bLedBreathe =1;
+ 102   2        }
+ 103   1        LedCounter=FTimes;
+ 104   1        LedDelayCnt = 0;
+ 105   1      
+ 106   1        LedMode=LMode; 
+ 107   1      }
+ 108          /*--------------------------------------------------------------*/
+ 109          /*--------------------------------------------------------------*/
+ 110          void LedBreathe(void)
+ 111          {
+ 112   1        if(bLedBreathe == 0) return;//LedMode!=LedBreatheState && LedMode!=LedGradOff) return;
+ 113   1        LedPeriod++;  
+ 114   1        
+ 115   1        if(++LedDutyTime>=110)  //11mS
+ 116   1        {
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 3   
+
+ 117   2          LedDutyTime=0;
+ 118   2          if(bDutyInc==1)
+ 119   2          {
+ 120   3            LedDuty++;
+ 121   3            if(LedDuty>=BLNDuty)
+ 122   3            {
+ 123   4              bDutyInc=0;
+ 124   4            }
+ 125   3          }
+ 126   2          else 
+ 127   2          {
+ 128   3            if(LedDuty>=1) {LedDuty--;LedOffDelayCnt=0;}
+ 129   3            else
+ 130   3            {
+ 131   4                if(++LedOffDelayCnt>=18)  //198mS Off
+ 132   4                {
+ 133   5                  bDutyInc=1;
+ 134   5                }
+ 135   4            }
+ 136   3          }
+ 137   2          if(bLedGrad==1) { if(++LedDuty1>=140) {bLedGrad=0;}}
+ 138   2            
+ 139   2          if(bLedBreathe2)
+ 140   2          {
+ 141   3            if(bDuty2Inc==1)
+ 142   3            {
+ 143   4              LedDuty2++;
+ 144   4              if(LedDuty2>=BLNDuty)   { bDuty2Inc=0;  }
+ 145   4            }
+ 146   3            else 
+ 147   3            {
+ 148   4              if(LedDuty2>=1) {LedDuty2--;LedOffDelayCnt2=0;}
+ 149   4              else
+ 150   4              {
+ 151   5                if(++LedOffDelayCnt2>=10) { bDuty2Inc=1;  }
+ 152   5              }
+ 153   4            }
+ 154   3          }   
+ 155   2        }
+ 156   1        if(LedPeriod<LedDuty) { bLedOn = 1;Displayflower();Displayflower1();}
+ 157   1        else if(LedPeriod<=BLNPeriod)   { bLedOn = 0;}
+ 158   1        else  { LedPeriod=0;}
+ 159   1        if(bLedGrad==1)
+ 160   1        {
+ 161   2          LedPeriod1++; 
+ 162   2          if(LedPeriod1<LedDuty1) { bLed1On = 1;}
+ 163   2          else if(LedPeriod1<=140)    { bLed1On = 0;}
+ 164   2          else  { LedPeriod1=0;}
+ 165   2        }
+ 166   1        if(bLedBreathe2)
+ 167   1        {
+ 168   2          LedPeriod2++; 
+ 169   2          if(LedPeriod2<LedDuty2) {bLed2On = 1;Displayflower();Displayflower1();}
+ 170   2          else if(LedPeriod2<=BLNPeriod)    {bLed2On = 0;}
+ 171   2          else  {LedPeriod2=0;}
+ 172   2        }
+ 173   1      }
+ 174          /*--------------------------------------------------------------*/
+ 175          
+ 176          #endif
+ 177          /*---------------------------------------------------*/
+ 178          void InitializeLedPMode(uchar LMode,uchar FTimes)     //设置LED显示模式    LMode:显示模式  FTimes:闪烁次数
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 4   
+
+ 179          { 
+ 180   1        if(LedPMode==LMode) 
+ 181   1          return;   //如果是所需模式，直接返回
+ 182   1      
+ 183   1        LedPCounter=FTimes;    //设置LED闪烁次数
+ 184   1        LedPMode=LMode;        //更新 LED 显示模式
+ 185   1        LedPDelay = 0;       //重置 LED 延迟计数器
+ 186   1        bLedPFlash = 1;        //设置 LED 闪烁标志为 1，表示启用闪烁
+ 187   1        if(LedPMode == LedPScreenOn)
+ 188   1        {
+ 189   2          LedPStep =1;    // 如果模式是常亮模式，设置 LED 步骤为 1
+ 190   2        }
+ 191   1        else 
+ 192   1          LedPStep =0;    
+ 193   1      }
+ 194          /*--------------------------------------------------------------*/
+ 195          /*--------------------------------------------------------------*/
+ 196          /*--------------------------------------------------------------*/
+ 197          
+ 198          void HexToDec(uint16_t DData)
+ 199          {
+ 200   1        uint16_t n;
+ 201   1        n=DData;
+ 202   1        if(n>100) n = 99;//100;
+ 203   1      //  QBit=(uint8_t)(n/1000);
+ 204   1      //  n%=1000;
+ 205   1      //  BBit=(uint8_t)(n/100);
+ 206   1      //  n %= 100;
+ 207   1        SBit=(uint8_t)(n/10);
+ 208   1        GBit=(uint8_t)(n%10);
+ 209   1      }
+ 210          
+ 211          /*---------------------------------------------------------------*/
+ 212          void DisplayNumber(void)     //显示数码管1数字（未加百位数字1）
+ 213          {
+ 214   1        if(LedDigTab[SBit] & 0x01) {LedPBufferData[0] |= 0x02;} //a   //COM1为低，00000001对应COM2为高，即L2为1，
+             -L1为0
+ 215   1        if(LedDigTab[SBit] & 0x02) {LedPBufferData[0] |= 0x04;} //b    //L1低L3高，类推
+ 216   1        if(LedDigTab[SBit] & 0x04) {LedPBufferData[0] |= 0x08;} //c
+ 217   1        if(LedDigTab[SBit] & 0x08) {LedPBufferData[0] |= 0x10;} //d
+ 218   1        if(LedDigTab[SBit] & 0x10) {LedPBufferData[0] |= 0x20;} //e
+ 219   1        if(LedDigTab[SBit] & 0x20) {LedPBufferData[0] |= 0x40;} //f
+ 220   1        if(LedDigTab[SBit] & 0x40) {LedPBufferData[1] |= 0x01;} //g
+ 221   1      
+ 222   1        if(LedDigTab[GBit] & 0x01) {LedPBufferData[1] |= 0x04;} //a
+ 223   1        if(LedDigTab[GBit] & 0x02) {LedPBufferData[1] |= 0x08;} //b
+ 224   1        if(LedDigTab[GBit] & 0x04) {LedPBufferData[1] |= 0x10;} //c
+ 225   1        if(LedDigTab[GBit] & 0x08) {LedPBufferData[1] |= 0x20;} //d
+ 226   1        if(LedDigTab[GBit] & 0x10) {LedPBufferData[1] |= 0x40;} //e
+ 227   1        if(LedDigTab[GBit] & 0x20) {LedPBufferData[2] |= 0x01;} //f
+ 228   1        if(LedDigTab[GBit] & 0x40) {LedPBufferData[2] |= 0x02;} //g
+ 229   1      
+ 230   1      }
+ 231          
+ 232          void DisplayNumber1(void)     //显示数码管2数字（未加百位数字1）
+ 233          {
+ 234   1        if(LedDigTab[SBit] & 0x01) {LedPBufferData[2] |= 0x10;} //a   
+ 235   1        if(LedDigTab[SBit] & 0x02) {LedPBufferData[2] |= 0x20;} //b   
+ 236   1        if(LedDigTab[SBit] & 0x04) {LedPBufferData[2] |= 0x40;} //c
+ 237   1        if(LedDigTab[SBit] & 0x08) {LedPBufferData[3] |= 0x01;} //d
+ 238   1        if(LedDigTab[SBit] & 0x10) {LedPBufferData[3] |= 0x02;} //e
+ 239   1        if(LedDigTab[SBit] & 0x20) {LedPBufferData[3] |= 0x04;} //f
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 5   
+
+ 240   1        if(LedDigTab[SBit] & 0x40) {LedPBufferData[3] |= 0x10;} //g
+ 241   1      
+ 242   1        if(LedDigTab[GBit] & 0x01) {LedPBufferData[3] |= 0x20;} //a
+ 243   1        if(LedDigTab[GBit] & 0x02) {LedPBufferData[3] |= 0x40;} //b
+ 244   1        if(LedDigTab[GBit] & 0x04) {LedPBufferData[4] |= 0x01;} //c
+ 245   1        if(LedDigTab[GBit] & 0x08) {LedPBufferData[4] |= 0x02;} //d
+ 246   1        if(LedDigTab[GBit] & 0x10) {LedPBufferData[4] |= 0x04;} //e
+ 247   1        if(LedDigTab[GBit] & 0x20) {LedPBufferData[4] |= 0x08;} //f
+ 248   1        if(LedDigTab[GBit] & 0x40) {LedPBufferData[4] |= 0x20;} //g
+ 249   1      
+ 250   1      }
+ 251          /*---------------------------------------------------------------*/
+ 252          void DisplaySmokeTime(void)
+ 253          {
+ 254   1        HexToDec(SmokeTime);///10);     
+ 255   1        DisplayNumber();
+ 256   1      }
+ 257          /*---------------------------------------------------------------*/
+ 258          void DisplaySmokePower(uint8_t PData)   //显示数码管1数字（电量）
+ 259          {
+ 260   1        uint8_t TempR8; 
+ 261   1        TempR8 = PData;//RefPowerTab[SmokeMode];
+ 262   1        if(TempR8>99) 
+ 263   1        {
+ 264   2          
+ 265   2          HexToDec(0);
+ 266   2          DisplayNumber();
+ 267   2          LedPBufferData[2] |= (0x08);   //数字百位1
+ 268   2        }
+ 269   1        else
+ 270   1        { 
+ 271   2          HexToDec(TempR8);
+ 272   2          DisplayNumber();
+ 273   2        }
+ 274   1      }
+ 275          
+ 276          void DisplayOilPower(uint8_t PData1)   //显示数码管2数字（油量）
+ 277          {
+ 278   1        uint8_t Temp1R8;
+ 279   1        Temp1R8 = PData1;//RefPowerTab[SmokeMode];
+ 280   1        if(Temp1R8>99) 
+ 281   1        {
+ 282   2          
+ 283   2          HexToDec(0);
+ 284   2          DisplayNumber1();
+ 285   2          LedPBufferData[4] |= (0x40);   //数字百位1
+ 286   2        }
+ 287   1        else
+ 288   1        { 
+ 289   2          HexToDec(Temp1R8);
+ 290   2          DisplayNumber1();
+ 291   2        }
+ 292   1      }
+ 293          
+ 294          /*---------------------------------------------------------------*/
+ 295          // void DisplaySmokeMode(void)
+ 296          // {
+ 297          //  if(SmokeMode==0) 
+ 298          //  LedPBufferData[1] |= 0x10;
+ 299          //  else if(SmokeMode==1) LedPBufferData[2] |= 0x10;
+ 300          //  else LedPBufferData[3]  |= 0x10;
+ 301          // }
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 6   
+
+ 302          /*---------------------------------------------------------------*/
+ 303          void DisplayBatPercent(uint8_t BL1)
+ 304          {
+ 305   1        LedPBufferData[6] |= (0x02);    //闪电图标
+ 306   1        DisplaySmokePower(BL1);   //电量值
+ 307   1      }
+ 308          
+ 309          void DisplayOilPercent(uint8_t OL1)
+ 310          {
+ 311   1        LedPBufferData[6] |= (0x04);   //油标
+ 312   1        DisplayOilPower(OL1);  //油量值
+ 313   1      }
+ 314          
+ 315          void DisplayBatLevel(uint8_t BL)
+ 316          {
+ 317   1        if(BL==0)
+ 318   1        {
+ 319   2            if(LedPMode!=LedPCharging && LedPMode!=LedPScreenOn)
+ 320   2            {
+ 321   3              if(bLedPFlash == 1)   {   LedPBufferData[0] |= 0x04;  }
+ 322   3            }
+ 323   2            else    { LedPBufferData[0] |= 0x04;  }
+ 324   2        }
+ 325   1        if(BL>=1)
+ 326   1        {
+ 327   2            LedPBufferData[0] |= (0x04);
+ 328   2            LedPBufferData[1] |= (0x04);
+ 329   2        }
+ 330   1        if(BL>=2)
+ 331   1        {
+ 332   2            LedPBufferData[3] |= (0x04);
+ 333   2        }
+ 334   1        if(BL>=3)
+ 335   1        {
+ 336   2            LedPBufferData[4] |= (0x04);
+ 337   2        }
+ 338   1        if(BL>=4)
+ 339   1        {
+ 340   2            LedPBufferData[5] |= (0x04);
+ 341   2        }
+ 342   1      }
+ 343          /*---------------------------------------------------------------*/
+ 344          void DisplayOilLevel(uint8_t OL)
+ 345          {
+ 346   1        if(OL==0)
+ 347   1        {
+ 348   2            if(LedPMode!=LedPScreenOn)
+ 349   2            {
+ 350   3              if(bLedPFlash == 1)
+ 351   3              {
+ 352   4                LedPBufferData[0] |= 0x08;
+ 353   4              }
+ 354   3            }
+ 355   2        }
+ 356   1        if(OL>=1)
+ 357   1        {
+ 358   2          LedPBufferData[0] |= 0x08;
+ 359   2          LedPBufferData[1] |= 0x08;
+ 360   2        }
+ 361   1        if(OL>=2)
+ 362   1        {
+ 363   2          LedPBufferData[6] |= 0x04;
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 7   
+
+ 364   2        }
+ 365   1        if(OL>=3)
+ 366   1        {
+ 367   2          LedPBufferData[7] |= 0x04;
+ 368   2        }
+ 369   1        if(OL>=4)
+ 370   1        {
+ 371   2          LedPBufferData[8] |= 0x04;
+ 372   2        }
+ 373   1      }
+ 374          /*---------------------------------------------------------------*/
+ 375          void DisplayTurnOnOffUI(void)
+ 376          {
+ 377   1        if((LedPDelay%200)==0)
+ 378   1        {
+ 379   2          if(bLedPStepID==1)
+ 380   2          {
+ 381   3            LedPStep++;
+ 382   3            if(LedPStep>10)
+ 383   3            {
+ 384   4              LEDP_STANDBY;
+ 385   4      //        LedPStep=0;
+ 386   4            }
+ 387   3          }
+ 388   2          else
+ 389   2          {
+ 390   3            if(LedPStep == 0)
+ 391   3            {
+ 392   4              LEDP_ALLOFF;
+ 393   4            }
+ 394   3            else LedPStep--;        
+ 395   3          }
+ 396   2        }
+ 397   1        if(LedPStep<8) {}
+ 398   1        else if(LedPStep == 8){}
+ 399   1        else {}
+ 400   1        if(LedPStep>=0) {}
+ 401   1        if(LedPStep>=1) {}
+ 402   1        if(LedPStep>=2) {}
+ 403   1        if(LedPStep>=3) {}
+ 404   1        if(LedPStep>=4) {}
+ 405   1        if(LedPStep>=5) {}
+ 406   1        if(LedPStep>=6) {}
+ 407   1        if(LedPStep>=7) {}
+ 408   1        if(LedPStep>=10){}
+ 409   1        }
+ 410          
+ 411          void DisplaySmokeBeidou(void)
+ 412          {
+ 413   1        if((LedPDelay%250)==0)
+ 414   1        {
+ 415   2          LedPStep++;
+ 416   2          if(LedPStep>7) LedPStep=0;
+ 417   2        }
+ 418   1        if(LedPStep>=0)
+ 419   1        {
+ 420   2        }
+ 421   1        if(LedPStep>=1)
+ 422   1        {
+ 423   2          LedPBufferData[5] |= (0x01); 
+ 424   2        }
+ 425   1        if(LedPStep>=2)
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 8   
+
+ 426   1        {
+ 427   2          LedPBufferData[5] |= (0x01);   
+ 428   2          LedPBufferData[5] |= (0x02);
+ 429   2        }
+ 430   1        if(LedPStep>=3)
+ 431   1        {
+ 432   2          LedPBufferData[5] |= (0x01);   
+ 433   2          LedPBufferData[5] |= (0x02);
+ 434   2          LedPBufferData[5] |= (0x04);
+ 435   2        }
+ 436   1        if(LedPStep>=4)
+ 437   1        {
+ 438   2          LedPBufferData[5] |= (0x01);   
+ 439   2          LedPBufferData[5] |= (0x02);
+ 440   2          LedPBufferData[5] |= (0x04);
+ 441   2          LedPBufferData[5] |= (0x08);
+ 442   2        }
+ 443   1        if(LedPStep>=5) 
+ 444   1        {
+ 445   2          LedPBufferData[5] |= (0x01);   
+ 446   2          LedPBufferData[5] |= (0x02);
+ 447   2          LedPBufferData[5] |= (0x04);
+ 448   2          LedPBufferData[5] |= (0x08);
+ 449   2          LedPBufferData[5] |= (0x10);
+ 450   2        }
+ 451   1        if(LedPStep>=6)
+ 452   1        {
+ 453   2          LedPBufferData[5] |= (0x01);   
+ 454   2          LedPBufferData[5] |= (0x02);
+ 455   2          LedPBufferData[5] |= (0x04);
+ 456   2          LedPBufferData[5] |= (0x08);
+ 457   2          LedPBufferData[5] |= (0x10);
+ 458   2          LedPBufferData[5] |= (0x40);
+ 459   2        }
+ 460   1        if(LedPStep>=7) 
+ 461   1        { 
+ 462   2          LedPBufferData[5] |= (0x01);   //第一格到第七格，要做走马
+ 463   2          LedPBufferData[5] |= (0x02);
+ 464   2          LedPBufferData[5] |= (0x04);
+ 465   2          LedPBufferData[5] |= (0x08);
+ 466   2          LedPBufferData[5] |= (0x10);
+ 467   2          LedPBufferData[5] |= (0x40);
+ 468   2          LedPBufferData[6] |= (0x01);
+ 469   2        }
+ 470   1      }
+ 471          
+ 472          void DisplaySmokestar(void)
+ 473          {
+ 474   1        switch(LedPStep1)
+ 475   1        {
+ 476   2          case 0:
+ 477   2        {
+ 478   3          Displaystar1on();
+ 479   3          Displaystar2on();
+ 480   3          Displaystar3on();
+ 481   3          break;
+ 482   3        }
+ 483   2        case 1:
+ 484   2        {
+ 485   3          Displaystar1off();
+ 486   3          Displaystar2on();
+ 487   3          Displaystar3on();
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 9   
+
+ 488   3          break;
+ 489   3        } 
+ 490   2        case 2:
+ 491   2        {
+ 492   3          Displaystar1on();
+ 493   3          Displaystar2off();
+ 494   3          Displaystar3on();
+ 495   3          break;
+ 496   3        }
+ 497   2      
+ 498   2        }
+ 499   1      }
+ 500          
+ 501          /**************************************************************************************************/
+ 502          /*************************************     标志灯      ********************************************/
+ 503          /**************************************************************************************************/
+ 504          void Displayflower(void)   //花环
+ 505          {
+ 506   1        LedPBufferData[6] |= (0x10);
+ 507   1        LedPBufferData[6] |= (0x20);
+ 508   1      }
+ 509          
+ 510          void Displayflower1(void)  //花朵
+ 511          {
+ 512   1        LedPBufferData[6] |= (0x08);
+ 513   1      }
+ 514          
+ 515          void Displaystar1on(void)    //流星1
+ 516          {
+ 517   1        Led1On;
+ 518   1      }
+ 519          void Displaystar1off(void)   
+ 520          {
+ 521   1        Led1Off;
+ 522   1      }
+ 523          
+ 524          
+ 525          void Displaystar2on(void)    //流星2
+ 526          {
+ 527   1        Led2On;
+ 528   1      }
+ 529          
+ 530          void Displaystar2off(void)   
+ 531          {
+ 532   1        Led2Off;
+ 533   1      }
+ 534          
+ 535          
+ 536          void Displaystar3on(void)    //流星3
+ 537          {
+ 538   1        Led3On;
+ 539   1      }
+ 540          
+ 541          void Displaystar3off(void)    
+ 542          {
+ 543   1        Led3Off;
+ 544   1      }
+ 545          void Displaycityon(void)    //城市加天空
+ 546          {
+ 547   1        Led4On;
+ 548   1      }
+ 549          
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 10  
+
+ 550          void Displaycityoff(void)    
+ 551          {
+ 552   1        Led4Off;
+ 553   1      }
+ 554          
+ 555          void Display_BeidouStaron(void)
+ 556          {
+ 557   1        LedPBufferData[5] |= (0x01);   //第一格到第七格，要做走马
+ 558   1        LedPBufferData[5] |= (0x02);
+ 559   1        LedPBufferData[5] |= (0x04);
+ 560   1        LedPBufferData[5] |= (0x08);
+ 561   1        LedPBufferData[5] |= (0x10);
+ 562   1        LedPBufferData[5] |= (0x40);
+ 563   1        LedPBufferData[6] |= (0x01);
+ 564   1      }
+ 565          
+ 566          
+ 567          /*---------------------------------------------------------------*/
+ 568          void SetLedPBuffer(uint16_t DData)
+ 569          {
+ 570   1        uint8_t i;
+ 571   1        for(i=0;i<LedPComN;i++)
+ 572   1        {
+ 573   2          LedPBufferData[i]=DData;
+ 574   2        }
+ 575   1      }
+ 576          
+ 577          void RenewLedPScanData(void)   //更新 LED 显示的数据，并检查缓冲区与扫描数据是否一致。
+ 578          {
+ 579   1        uint8_t i;
+ 580   1        bLedPRenewD=0;
+ 581   1        for(i=0;i<LedPComN;i++)   //遍历 LedPComN 个数据项，比较 LedPScanData 和 LedPBufferData。
+ 582   1        {
+ 583   2          if(LedPScanData[i]!=LedPBufferData[i])
+ 584   2          {
+ 585   3            bLedPRenewD=1;   //如果数据不一致，设置 bLedPRenewD 为 1。
+ 586   3            break;
+ 587   3          }
+ 588   2        } 
+ 589   1        if(bLedPRenewD==0) return;
+ 590   1        bLedPRenewD=0;
+ 591   1        ET0 = 0;   //关闭Timer0 中断使能
+ 592   1        for(i=0;i<LedPComN;i++)
+ 593   1        {
+ 594   2          LedPScanData[i]=LedPBufferData[i];  //将 LedPBufferData 的数据拷贝到 LedPScanData 中
+ 595   2        }
+ 596   1        ET0 = 1;  //打开Timer0 中断使能
+ 597   1      }
+ 598          /*---------------------------------------------------------------*/
+ 599          void LedPController(void)
+ 600          {
+ 601   1      //  uint8_t m;
+ 602   1        uint16_t m0;
+ 603   1        if(LedPRenewDelay<10) return;   //LedPRenewDelay:LED 刷新延迟计数器 
+ 604   1                        //如果 LedPRenewDelay 小于 10，直接返回，意味着在此条件下不执行后续代码。这是为了确保在较短的时间
+             -间隔内不进行 LED 更新
+ 605   1        LedPRenewDelay=0;
+ 606   1        LedPDelay++;
+ 607   1        if(LedPDelay>60000) LedPDelay=0;  //增加 LedPDelay 计数器。如果它超过 60000，则重置为 0。这用于控制 LED 的
+             -更新频率
+ 608   1        SetLedPBuffer(0);   // 将所有LED关闭，准备进行新的状态更新
+ 609   1        m0 = 250;
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 11  
+
+ 610   1        if(LedPMode == LedPCharging) {m0 = 500;}
+ 611   1        if((LedPDelay%m0)==0)   //如果 LedPDelay 对 m0 取模为 0，则说明到达了更新闪烁状态的时机
+ 612   1        {
+ 613   2          if(bLedPFlash==0) {bLedPFlash=1;}   //如果 bLedPFlash 为 0，切换为 1，表示当前 LED 处于闪烁状态
+ 614   2          else
+ 615   2          {
+ 616   3            bLedPFlash = 0;       //如果 bLedPFlash 为 1，切换为 0，表示当前 LED 处于关闭状态
+ 617   3            if(LedPCounter>0) //如果 LedPCounter 大于 0，减少 LedPCounter 的值。如果计数器减至 0，则执行 LEDP_ALLOF
+             -F，关闭所有 LED，并将 bKeyEnable 设置为 0，禁用其他键的输入
+ 618   3            {
+ 619   4              if(--LedPCounter == 0)
+ 620   4              {
+ 621   5      //          if(LedPMode==LedPBatLow) {LEDP_ALLOFF;bKeyEnable =0;}
+ 622   5      //          else { LEDP_STANDBY;  }       
+ 623   5                LEDP_ALLOFF;
+ 624   5              //  bKeyEnable =0;  //禁止按键
+ 625   5              }
+ 626   4            }
+ 627   3          }
+ 628   2        }
+ 629   1        switch(LedPMode)
+ 630   1        {
+ 631   2          case LedPSolidOff:
+ 632   2          {
+ 633   3            Displaystar1off();  
+ 634   3            Displaystar2off();
+ 635   3            Displaystar3off();
+ 636   3            Displaycityoff();
+ 637   3            break;
+ 638   3          }
+ 639   2          /*-----------------------------------------------------------*/
+ 640   2          case LedPSolidOn:   
+ 641   2          {
+ 642   3            Displaycityon();
+ 643   3            Displaystar1on();
+ 644   3            Displaystar2on();
+ 645   3            Displaystar3on();
+ 646   3            SetLedPBuffer(0Xffff);      
+ 647   3            break;
+ 648   3          }
+ 649   2          /*-----------------------------------------------------------*/
+ 650   2          case LedPPowerOn:
+ 651   2          {   
+ 652   3            // Displaycityon();
+ 653   3            // Displaystar1on();
+ 654   3            // Displaystar2on();
+ 655   3            // Displaystar3on();
+ 656   3            // SetLedPBuffer(0Xffff);
+ 657   3            break;
+ 658   3          }
+ 659   2          /*-----------------------------------------------------------*/
+ 660   2          case LedPTurnOn:
+ 661   2          case LedPTurnOff:
+ 662   2          {
+ 663   3            Displaycityoff();
+ 664   3            Displaystar1off();
+ 665   3            Displaystar2off();
+ 666   3            Displaystar3off();
+ 667   3            break;
+ 668   3          }
+ 669   2          /*-------------------------------------------*/
+ 670   2          case LedPStandby:
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 12  
+
+ 671   2          {
+ 672   3            if(ChanNum==0)
+ 673   3            {
+ 674   4              LedPMode = LedPSolidOff;
+ 675   4              break;
+ 676   4            }
+ 677   3            else
+ 678   3              {
+ 679   4              Displaycityon();
+ 680   4              Displaystar1on();
+ 681   4              Displaystar2on();
+ 682   4              Displaystar3on();
+ 683   4              DisplayBatPercent(BatPowPercent);
+ 684   4              DisplayOilPercent(OilPercent);
+ 685   4               Display_BeidouStaron();  //北斗七星灯
+ 686   4            
+ 687   4            if(ChanNum==1)  //单发
+ 688   4            {
+ 689   5              Displayflower();  //花环
+ 690   5              
+ 691   5            }
+ 692   4            else if(ChanNum==2)  //双发
+ 693   4            {
+ 694   5              //bLedBreathe2=1;
+ 695   5                Displayflower();  //花环
+ 696   5                Displayflower1(); //花朵
+ 697   5            }   
+ 698   4           }
+ 699   3            break;
+ 700   3          }
+ 701   2          /*-----------------------------------------------------------*/
+ 702   2          case LedPSmoking:
+ 703   2          {
+ 704   3            if(ChanNum==0)
+ 705   3            {
+ 706   4              LedPMode = LedPSolidOff;
+ 707   4              break;
+ 708   4             }
+ 709   3            else
+ 710   3            {
+ 711   4            if((LedPDelay%500)==0)
+ 712   4            {
+ 713   5             LedPStep1++;
+ 714   5            if(LedPStep1>2) LedPStep1=0;
+ 715   5            }
+ 716   4             DisplaySmokestar();
+ 717   4      
+ 718   4            DisplayBatPercent(BatPowPercent);
+ 719   4            DisplayOilPercent(OilPercent);
+ 720   4            DisplaySmokeBeidou();
+ 721   4            Displaycityon();   
+ 722   4            if(ChanNum==1)  //单发
+ 723   4            {
+ 724   5              Displayflower();  //花环
+ 725   5              
+ 726   5            }
+ 727   4            else if(ChanNum==2)  //双发
+ 728   4            {
+ 729   5              //bLedBreathe2=1;
+ 730   5                Displayflower();  //花环
+ 731   5                Displayflower1(); //花朵
+ 732   5            }     
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 13  
+
+ 733   4            
+ 734   4            break;
+ 735   4          }
+ 736   3          case LedPSmokeOver:   //超时灯效，当前档位闪烁2次
+ 737   3          {
+ 738   4      
+ 739   4            Displaycityon();   //是闪烁当前电量还是188？
+ 740   4            Displaystar1on();
+ 741   4            Displaystar2on();
+ 742   4            Displaystar3on();
+ 743   4            DisplayBatPercent(BatPowPercent);
+ 744   4            DisplayOilPercent(OilPercent);
+ 745   4            if(ChanNum==1)  //单发
+ 746   4            {
+ 747   5              Displayflower();  //花环
+ 748   5              
+ 749   5            }
+ 750   4            else if(ChanNum==2)  //双发
+ 751   4            {
+ 752   5              //bLedBreathe2=1;
+ 753   5                Displayflower();  //花环
+ 754   5                Displayflower1(); //花朵
+ 755   5            }   
+ 756   4          }
+ 757   3            break;
+ 758   3          }
+ 759   2          /*-----------------------------------------------------------*/
+ 760   2          /*-----------------------------------------------------------*/
+ 761   2          case LedPScreenOn:
+ 762   2          {
+ 763   3             
+ 764   3      
+ 765   3          }
+ 766   2          /*-----------------------------------------------------------*/
+ 767   2          case LedPBatLow:   //闪烁十次
+ 768   2          {
+ 769   3            if(bLedPFlash == 1)
+ 770   3            {
+ 771   4            Displaycityon();
+ 772   4            Displaystar1on();
+ 773   4            Displaystar2on();
+ 774   4            Displaystar3on();
+ 775   4            DisplayBatPercent(BatPowPercent);         
+ 776   4            Displayflower();  //花环
+ 777   4            Displayflower1(); //花朵
+ 778   4            Display_BeidouStaron();  //北斗七星灯
+ 779   4            // DisplayOilPercent(OilPercent);
+ 780   4            } 
+ 781   3            if(bLedPFlash == 0) 
+ 782   3            {
+ 783   4            Displaycityoff();
+ 784   4            Displaystar1off();
+ 785   4            Displaystar2off();
+ 786   4            Displaystar3off();
+ 787   4            }
+ 788   3            break;    
+ 789   3          }
+ 790   2      
+ 791   2          case LedPOilLow:   //闪烁十次
+ 792   2          {
+ 793   3            if(bLedPFlash == 1)
+ 794   3            {
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 14  
+
+ 795   4            Displaycityon();
+ 796   4            Displaystar1on();
+ 797   4            Displaystar2on();
+ 798   4            Displaystar3on();
+ 799   4            // DisplayBatPercent(BatPowPercent);          
+ 800   4            Displayflower();  //花环
+ 801   4            Displayflower1(); //花朵
+ 802   4            Display_BeidouStaron();  //北斗七星灯
+ 803   4            DisplayOilPercent(OilPercent);
+ 804   4            } 
+ 805   3            if(bLedPFlash == 0) 
+ 806   3            {
+ 807   4            Displaycityoff();
+ 808   4            Displaystar1off();
+ 809   4            Displaystar2off();
+ 810   4            Displaystar3off();
+ 811   4            }
+ 812   3            break;    
+ 813   3          }
+ 814   2          /*-----------------------------------------------------------*/
+ 815   2          case LedPAllFlash:
+ 816   2          {
+ 817   3          
+ 818   3          }
+ 819   2          /*-------------------------------------------*/
+ 820   2          case LedPShortC:
+ 821   2          {
+ 822   3          
+ 823   3           }
+ 824   2          /*-------------------------------------------*/
+ 825   2          case LedPTimeOver:
+ 826   2          {
+ 827   3            if(bLedPFlash==0)
+ 828   3            {
+ 829   4              Displaycityoff();
+ 830   4              Displaystar1off();
+ 831   4              Displaystar2off();
+ 832   4              Displaystar3off();
+ 833   4            }
+ 834   3            if(bLedPFlash==1)
+ 835   3            {       
+ 836   4              Displaycityon();
+ 837   4              Displaystar1on();
+ 838   4              Displaystar2on();
+ 839   4              Displaystar3on();
+ 840   4              DisplayBatPercent(88);
+ 841   4              DisplayOilPercent(88);
+ 842   4              LedPBufferData[4] |= (0x40);    //数字1
+ 843   4              LedPBufferData[2] |= (0x08);  //数字
+ 844   4              if(SmokeMode==0)  //单发
+ 845   4              {
+ 846   5                Displayflower();  //花环
+ 847   5                Display_BeidouStaron(); 
+ 848   5              }
+ 849   4              else if(SmokeMode==1)  //双发
+ 850   4              {
+ 851   5                Displayflower();  //花环
+ 852   5                Displayflower1(); //花朵
+ 853   5                Display_BeidouStaron();  //北斗七星灯
+ 854   5              }
+ 855   4            }       
+ 856   3            break;     
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 15  
+
+ 857   3          
+ 858   3           }
+ 859   2          /*---------------------------------------*/
+ 860   2          case LedPWarning:
+ 861   2          {
+ 862   3            if(bLedPFlash==0)
+ 863   3            {
+ 864   4              Displaycityoff();
+ 865   4              Displaystar1off();
+ 866   4              Displaystar2off();
+ 867   4              Displaystar3off();
+ 868   4            }
+ 869   3            if(bLedPFlash==1)
+ 870   3            {       
+ 871   4              Displaycityon();
+ 872   4              Displaystar1on();
+ 873   4              Displaystar2on();
+ 874   4              Displaystar3on();
+ 875   4              DisplayBatPercent(88);
+ 876   4              DisplayOilPercent(88);
+ 877   4              LedPBufferData[4] |= (0x40);   
+ 878   4              LedPBufferData[2] |= (0x08);
+ 879   4              Displayflower();  //花环
+ 880   4                Displayflower1(); //花朵  //先关掉，调试，后面记得打开
+ 881   4              Display_BeidouStaron();  //北斗七星灯       
+ 882   4            }       
+ 883   3            break;  
+ 884   3          }
+ 885   2          /*-----------------------------------------------------------*/
+ 886   2          case LedPCharging:
+ 887   2          {
+ 888   3            switch(ChargeStep)
+ 889   3            {
+ 890   4              case 0:
+ 891   4              {
+ 892   5                DisplaySmokePower(BatPowPercent);
+ 893   5                if(bLedPFlash == 0)
+ 894   5                {
+ 895   6                  LedPBufferData[6] |= (0x02);   //闪电图标闪烁
+ 896   6                }
+ 897   5                  Displaycityon();
+ 898   5                  Displaystar1on();
+ 899   5                  Displaystar2on();
+ 900   5                  Displaystar3on();
+ 901   5                  Display_BeidouStaron();
+ 902   5                  Displayflower();
+ 903   5                  Displayflower1();
+ 904   5                  break;
+ 905   5              }
+ 906   4              case 1: //Charging
+ 907   4              {       
+ 908   5                DisplaySmokePower(BatPowPercent);
+ 909   5                if(bLedPFlash == 0)
+ 910   5                {
+ 911   6                  LedPBufferData[6] |= (0x02);   
+ 912   6                }
+ 913   5                  Displaycityoff();
+ 914   5                  Displaystar1off();
+ 915   5                  Displaystar2off();
+ 916   5                  Displaystar3off();
+ 917   5                break;
+ 918   5              }
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 16  
+
+ 919   4              case 2: //Charge full
+ 920   4              {
+ 921   5                DisplaySmokePower(BatPowPercent);
+ 922   5                LedPBufferData[6] |= (0x02);
+ 923   5                break;
+ 924   5              }
+ 925   4              case 3: 
+ 926   4              {
+ 927   5                Displaycityoff();
+ 928   5                  Displaystar1off();
+ 929   5                Displaystar2off();
+ 930   5                Displaystar3off();
+ 931   5                break;
+ 932   5              }
+ 933   4              default:{break;}
+ 934   4            }
+ 935   3            break;
+ 936   3          }
+ 937   2          /*-----------------------------------------------------------*/
+ 938   2          case LedPDebug:
+ 939   2          {
+ 940   3      
+ 941   3          }
+ 942   2          /*-----------------------------------------------------------*/
+ 943   2          default:{break;}  
+ 944   2        }
+ 945   1        RenewLedPScanData();
+ 946   1      }
+ 947          /*--------------------------------------------------------------*/
+ 948          
+ 949          
+ 950          void LedPComHighR(void)
+ 951          {
+ 952   1        LED_COM1 =1;
+ 953   1        LED_COM2 =1;
+ 954   1        LED_COM3 =1;
+ 955   1        LED_COM4 =1;
+ 956   1        LED_COM5 =1;
+ 957   1        LED_COM6 =1;
+ 958   1        LED_COM7 =1;
+ 959   1      
+ 960   1        PORTIDX = 1;
+ 961   1        PINMOD10 = (PINMOD10 & 0x0f) | (PIN_H_MODE_OD);   //L6
+ 962   1        PINMOD76 = (PINMOD76 & 0x0f) | (PIN_H_MODE_OD);   //L7
+ 963   1        PORTIDX = 2;
+ 964   1        PINMOD10 = (PIN_H_MODE_OD | PIN_L_MODE_OD);     //L1  L2
+ 965   1        PORTIDX =3;
+ 966   1        PINMOD54 = (PINMOD54 & 0x0f) | (PIN_H_MODE_OD); //L5
+ 967   1        PINMOD76 = (PIN_H_MODE_OD | PIN_L_MODE_OD);     //L3  L4
+ 968   1      }
+ 969          /*--------------------------------------------------------------*/
+ 970          void LedPScan(void)
+ 971          {
+ 972   1        if(++LedPScanT<3)    //调整扫描周期，扫描快慢
+ 973   1          return;     //300us扫描一次 
+ 974   1        LedPScanT=0;
+ 975   1        LedPComHighR();
+ 976   1        if(bBatOD || LedPMode==LedPSolidOff) return;
+ 977   1      //  /*
+ 978   1      //  LedPScanStep = 6;
+ 979   1        switch(LedPScanStep)
+ 980   1        {
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 17  
+
+ 981   2          case 0:
+ 982   2          {
+ 983   3            LED_COM1_LOW;
+ 984   3      //      if(LedPScanData[0]&0x01) {LED_COM1_HIGH;}
+ 985   3            if(LedPScanData[0]&0x02) {LED_COM2_HIGH;}
+ 986   3            if(LedPScanData[0]&0x04) {LED_COM3_HIGH;}
+ 987   3            if(LedPScanData[0]&0x08) {LED_COM4_HIGH;}
+ 988   3            if(LedPScanData[0]&0x10) {LED_COM5_HIGH;}
+ 989   3            if(LedPScanData[0]&0x20) {LED_COM6_HIGH;}
+ 990   3            if(LedPScanData[0]&0x40) {LED_COM7_HIGH;}
+ 991   3            break;
+ 992   3          }
+ 993   2          case 1:
+ 994   2          {
+ 995   3            LED_COM2_LOW;
+ 996   3            if(LedPScanData[1]&0x01) {LED_COM1_HIGH;}
+ 997   3      //      if(LedPScanData[1]&0x02) {LED_COM2_HIGH;}
+ 998   3            if(LedPScanData[1]&0x04) {LED_COM3_HIGH;}
+ 999   3            if(LedPScanData[1]&0x08) {LED_COM4_HIGH;}
+1000   3            if(LedPScanData[1]&0x10) {LED_COM5_HIGH;}
+1001   3            if(LedPScanData[1]&0x20) {LED_COM6_HIGH;}
+1002   3            if(LedPScanData[1]&0x40) {LED_COM7_HIGH;}
+1003   3            break;                                  
+1004   3          }                                               
+1005   2          case 2:
+1006   2          {
+1007   3            LED_COM3_LOW;
+1008   3            if(LedPScanData[2]&0x01) {LED_COM1_HIGH;}
+1009   3            if(LedPScanData[2]&0x02) {LED_COM2_HIGH;}
+1010   3      //      if(LedPScanData[2]&0x04) {LED_COM3_HIGH;}
+1011   3            if(LedPScanData[2]&0x08) {LED_COM4_HIGH;}
+1012   3            if(LedPScanData[2]&0x10) {LED_COM5_HIGH;}
+1013   3            if(LedPScanData[2]&0x20) {LED_COM6_HIGH;}
+1014   3            if(LedPScanData[2]&0x40) {LED_COM7_HIGH;}
+1015   3            break;                                  
+1016   3          }
+1017   2          case 3:
+1018   2          {
+1019   3            LED_COM4_LOW;
+1020   3            if(LedPScanData[3]&0x01) {LED_COM1_HIGH;}
+1021   3            if(LedPScanData[3]&0x02) {LED_COM2_HIGH;}
+1022   3            if(LedPScanData[3]&0x04) {LED_COM3_HIGH;}
+1023   3      //      if(LedPScanData[3]&0x08) {LED_COM4_HIGH;}
+1024   3            if(LedPScanData[3]&0x10) {LED_COM5_HIGH;}
+1025   3            if(LedPScanData[3]&0x20) {LED_COM6_HIGH;}
+1026   3            if(LedPScanData[3]&0x40) {LED_COM7_HIGH;}
+1027   3            break;                                  
+1028   3          }                                               
+1029   2          case 4:
+1030   2          {
+1031   3            LED_COM5_LOW;
+1032   3            if(LedPScanData[4]&0x01) {LED_COM1_HIGH;}
+1033   3            if(LedPScanData[4]&0x02) {LED_COM2_HIGH;}
+1034   3            if(LedPScanData[4]&0x04) {LED_COM3_HIGH;}
+1035   3            if(LedPScanData[4]&0x08) {LED_COM4_HIGH;}
+1036   3            //if(LedPScanData[4]&0x10) {LED_COM5_HIGH;}
+1037   3            if(LedPScanData[4]&0x20) {LED_COM6_HIGH;}
+1038   3            if(LedPScanData[4]&0x40) {LED_COM7_HIGH;}
+1039   3            break;
+1040   3          }
+1041   2        
+1042   2          case 5:
+C51 COMPILER V9.60.7.0   LEDFUNCTION                                                       09/25/2024 11:06:14 PAGE 18  
+
+1043   2          {
+1044   3            LED_COM6_LOW;
+1045   3            if(LedPScanData[5]&0x01) {LED_COM1_HIGH;}
+1046   3            if(LedPScanData[5]&0x02) {LED_COM2_HIGH;}
+1047   3            if(LedPScanData[5]&0x04) {LED_COM3_HIGH;}
+1048   3            if(LedPScanData[5]&0x08) {LED_COM4_HIGH;}
+1049   3            if(LedPScanData[5]&0x10) {LED_COM5_HIGH;}
+1050   3      //      if(LedPScanData[5]&0x20) {LED_COM6_HIGH;}
+1051   3            if(LedPScanData[5]&0x40) {LED_COM7_HIGH;}
+1052   3            break;
+1053   3          }
+1054   2          case 6:
+1055   2          {                         //花环
+1056   3            LED_COM7_LOW;
+1057   3            if(LedPScanData[6]&0x01) {LED_COM1_HIGH;}
+1058   3            if(LedPScanData[6]&0x02) {LED_COM2_HIGH;}
+1059   3            if(LedPScanData[6]&0x04) {LED_COM3_HIGH;}
+1060   3            if(LedPScanData[6]&0x08) {LED_COM4_HIGH;}    //叶子，这里要做呼吸
+1061   3            if(LedPScanData[6]&0x10) {LED_COM5_HIGH;}
+1062   3            if(LedPScanData[6]&0x20) {LED_COM6_HIGH;}
+1063   3      //      if(LedPScanData[6]&0x40) {LED_COM7_HIGH;}
+1064   3            break;
+1065   3          }
+1066   2          
+1067   2          default:{break;}
+1068   2        }
+1069   1      //  */
+1070   1        LedPScanStep++;
+1071   1        if(LedPScanStep > 7) LedPScanStep=0;
+1072   1      }
+1073          /*--------------------------------------------------------------*/
+1074          
+1075          
+1076          /*--------------------------------------------------------------*/
+1077          
+1078          
+1079          
+1080          
+1081          
+1082          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   3947    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     57    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

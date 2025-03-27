@@ -1,0 +1,262 @@
+C51 COMPILER V9.60.7.0   KEYFUNCTION                                                       07/19/2024 17:31:56 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE KEYFUNCTION
+OBJECT MODULE PLACED IN .\obj\KeyFunction.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\KeyFunction.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Drivers\inc;.\
+                    -Drivers\src;.\src;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\KeyFunction.lst) TABS(2) OBJECT(.\obj\KeyFunction.obj)
+
+line level    source
+
+   1          
+   2          #include "Global.h"
+   3          
+   4          uint8_t KeyState,KeyValue,KeyBuffer0,KeyBuffer1;
+   5          uint8_t KeyAutoState;
+   6          uint16_t  KeyDelay,KeyDelay1,KeyDelay2,SkinTouchDelay;
+   7          uint8_t   AgeKeyCnt,AgeKeyBuffer,AgeKeyCnt1,AgeKeyBuffer1;
+   8          uint16_t  AgeKeyDelay,AgeKeyDelay1;
+   9          uint16_t  KeyAutoDelay;
+  10          /*--------------------------------------------------------------*/
+  11          void ClearKeyFlag(void)
+  12          {
+  13   1        KeyState=KeyRelease;
+  14   1        KeyValue=KeyNo;
+  15   1        KeyBuffer0=KeyNo;
+  16   1        KeyBuffer1=KeyNo;
+  17   1        KeyDelay=0;
+  18   1        KeyDelay1=0;
+  19   1      
+  20   1        AgeKeyCnt=0;
+  21   1        AgeKeyBuffer=0;
+  22   1        AgeKeyCnt1=0;
+  23   1        AgeKeyBuffer1=0;
+  24   1        AgeKeyDelay1=0;
+  25   1        AgeKeyDelay=0;
+  26   1      }
+  27          /*--------------------------------------------------------------*/
+  28          uint8_t ReadKeyIO(void)
+  29          {
+  30   1        uint8_t i,j;
+  31   1        i=0;  
+  32   1        if(KeyOnOffPin == KeyTruth) i |=KeyOnOff;
+  33   1        j=15;while(--j) WDT_Clear();
+  34   1        j=0;  
+  35   1        if(KeyOnOffPin == KeyTruth) j |=KeyOnOff;
+  36   1        if(i!=j) i=KeyError;
+  37   1        return i;
+  38   1      }
+  39          /*--------------------------------------------------------------*/
+  40          //void ReadTurnOnKey(void)
+  41          //{
+  42          //  if(MainState!=TurnOffMode) return;
+  43          //  KeyBuffer0=ReadKeyIO();
+  44          //  KeyBuffer0 &= KeyTurnOn;
+  45          //  if(KeyBuffer0==KeyTurnOn)
+  46          //  {
+  47          
+  48          //    if(KeyState==KeyRelease)
+  49          //    {
+  50          //      KeyState=KeyPress;
+  51          //      KeyDelay=0;
+  52          //      KeyBuffer1=KeyBuffer0;
+  53          //    }
+  54          //    else if(KeyState==KeyPress)
+C51 COMPILER V9.60.7.0   KEYFUNCTION                                                       07/19/2024 17:31:56 PAGE 2   
+
+  55          //    {
+  56          //      if(KeyDelay>=3000ul)
+  57          //      {
+  58          //        KeyDelay=0;
+  59          //        KeyBuffer1=0;
+  60          //        if(KeyValue!=KeyOnValue) KeyValue=KeyOnValue;
+  61          //      }
+  62          //    }
+  63          //  }
+  64          //  else
+  65          //  {
+  66          //    KeyValue=KeyNo;
+  67          //    KeyBuffer1=0;
+  68          //    KeyState=KeyRelease;
+  69          //  }
+  70          //}
+  71          /*--------------------------------------------------------------*/
+  72          void ReadKeyValue(void)
+  73          {
+  74   1        KeyBuffer0=ReadKeyIO();  
+  75   1        if(KeyBuffer0==KeyError) return;
+  76   1        if(KeyBuffer0!=KeyNo)
+  77   1        {
+  78   2      
+  79   2          if(KeyState==KeyRelease)// || (KeyBuffer1!=KeyBuffer0))
+  80   2          {
+  81   3            KeyState=KeyPress;
+  82   3            KeyDelay=0;
+  83   3            KeyBuffer1=KeyBuffer0;
+  84   3          }
+  85   2          else if(KeyState==KeyPress && (KeyBuffer1 & KeyOnOff) && (KeyBuffer0 & KeyOnOff))
+  86   2          {
+  87   3            if(KeyDelay>=3000ul && KeyValue!=KeyOnOffValue)
+  88   3            {
+  89   4              KeyDelay=0;
+  90   4              KeyBuffer1=0;
+  91   4              KeyValue=KeyOnOffValue;
+  92   4            }
+  93   3          }
+  94   2          else {KeyBuffer1=0;KeyDelay=0;}
+  95   2        }
+  96   1        else
+  97   1        {
+  98   2          if(KeyBuffer1==KeyGear && KeyDelay>=30ul)
+  99   2          {
+ 100   3            KeyBuffer1=0;
+ 101   3            KeyValue=KeyGear;
+ 102   3          }
+ 103   2          else { KeyBuffer1=0;KeyValue=KeyNo;}
+ 104   2          KeyState=KeyRelease;
+ 105   2        }
+ 106   1      }
+ 107          /*--------------------------------------------------------------*/
+ 108          void KeyGearAdjust(void)
+ 109          {
+ 110   1        if(KeyValue!=KeyGear || MainState==TurnOffMode) return;//) return;//  ||  MainState==WarningMode
+ 111   1        KeyValue=0;
+ 112   1        if(bGearAddSubFlag==0)
+ 113   1        {
+ 114   2          GearState++;
+ 115   2          if(GearState>=MaxGear)
+ 116   2          {
+C51 COMPILER V9.60.7.0   KEYFUNCTION                                                       07/19/2024 17:31:56 PAGE 3   
+
+ 117   3            bGearAddSubFlag=1;
+ 118   3            GearState=MaxGear-2;
+ 119   3          }
+ 120   2        }
+ 121   1        else
+ 122   1        {
+ 123   2          if(GearState==0)
+ 124   2          {
+ 125   3            bGearAddSubFlag=0;
+ 126   3            GearState=1;
+ 127   3          }
+ 128   2          else GearState--;
+ 129   2        }
+ 130   1      
+ 131   1      //  bFlashUpdate=1;
+ 132   1        //UpdateFlashData();
+ 133   1      }
+ 134          /*--------------------------------------------------------------*/
+ 135          /*--------------------------------------------------------------*/
+ 136          //void KeyIceSet(void)
+ 137          //{
+ 138          //  if(KeyValue!=KeyIce || MainState==TurnOffMode) return;
+ 139          //    KeyValue=0;
+ 140          //    if(bIceState==0) {bIceState=1;LedCoolState=1;}
+ 141          //    else { bIceState=0;LedCoolState=0;}
+ 142          ////    bFlashUpdate=1;
+ 143          //    //UpdateFlashData();
+ 144          //}
+ 145          /*--------------------------------------------------------------*/
+ 146          void KeyAutoSet(void)
+ 147          {
+ 148   1        if(KeyValue!=KeyAuto || MainState==TurnOffMode) return;
+ 149   1        KeyValue=0;
+ 150   1        if(bAutoState==0) {bAutoState=1;LedAutoState=1;AutoDelay=0;}
+ 151   1        else { bAutoState=0;LedAutoState=0;}
+ 152   1      //  bFlashUpdate=1;
+ 153   1        //UpdateFlashData();
+ 154   1      }
+ 155          /*--------------------------------------------------------------*/
+ 156          void ScanAutoKey(void)
+ 157          {
+ 158   1        if(KeyFireInPin==0)
+ 159   1        {
+ 160   2          if(KeyAutoState==0)
+ 161   2          {
+ 162   3            KeyAutoState=1;
+ 163   3            KeyAutoDelay=0;
+ 164   3          }
+ 165   2          else if(KeyAutoState==1)
+ 166   2          {
+ 167   3            if(KeyAutoDelay>3000)
+ 168   3            { 
+ 169   4              KeyAutoDelay=0;
+ 170   4              KeyAutoState=2;
+ 171   4              KeyValue=KeyAuto;
+ 172   4            }
+ 173   3          }
+ 174   2          else if(KeyAutoState==2) KeyAutoDelay=0;
+ 175   2        }
+ 176   1        else
+ 177   1        {
+ 178   2          if(KeyAutoState==2)
+C51 COMPILER V9.60.7.0   KEYFUNCTION                                                       07/19/2024 17:31:56 PAGE 4   
+
+ 179   2          {
+ 180   3            if(KeyAutoDelay>50)
+ 181   3            {
+ 182   4              KeyAutoState=0;
+ 183   4            }
+ 184   3          }
+ 185   2          else KeyAutoState=0;
+ 186   2        }
+ 187   1      }
+ 188          /*--------------------------------------------------------------*/
+ 189          uint8_t ReadFireKey(void)
+ 190          {
+ 191   1        uint8_t i,j;
+ 192   1        i=0;  
+ 193   1        if(KeyFireInPin == KeyTruth) i =KeyFire;
+ 194   1        j=15;while(--j) WDT_Clear();
+ 195   1        j=0;  
+ 196   1        if(KeyFireInPin == KeyTruth) j =KeyFire;
+ 197   1        if(i!=j) i=KeyError;
+ 198   1        return i;
+ 199   1      }
+ 200          /*--------------------------------------------------------------*/
+ 201          /*--------------------------------------------------------------*/
+ 202          /*--------------------------------------------------------------*/
+ 203          void CheckSkinTouch(void)
+ 204          {
+ 205   1        if(bKeyTouchState==0)
+ 206   1        {
+ 207   2          if(KeyTouchInPin==KeyTouchTruth)
+ 208   2          {
+ 209   3            if(SkinTouchDelay>=50)
+ 210   3            {
+ 211   4              SkinTouchDelay=0;
+ 212   4              bKeyTouchState=1;
+ 213   4            }
+ 214   3          }
+ 215   2          else {SkinTouchDelay=0;}
+ 216   2        }
+ 217   1        else
+ 218   1        {
+ 219   2          if(KeyTouchInPin!=KeyTouchTruth)
+ 220   2          {
+ 221   3            if(SkinTouchDelay>=50)
+ 222   3            {
+ 223   4              SkinTouchDelay=0;
+ 224   4              bKeyTouchState=0;
+ 225   4            }
+ 226   3          }
+ 227   2          else {SkinTouchDelay=0;}
+ 228   2        }
+ 229   1      }
+ 230          /*--------------------------------------------------------------*/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    603    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     23    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+C51 COMPILER V9.60.7.0   KEYFUNCTION                                                       07/19/2024 17:31:56 PAGE 5   
+
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

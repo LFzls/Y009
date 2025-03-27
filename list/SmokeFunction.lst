@@ -1,0 +1,485 @@
+C51 COMPILER V9.60.7.0   SMOKEFUNCTION                                                     09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SMOKEFUNCTION
+OBJECT MODULE PLACED IN .\out\SmokeFunction.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\SmokeFunction.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\inc;
+                    -.\Drivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\SmokeFunction.lst) TABS(2) OBJECT(.\out\SmokeFunction.o
+                    -bj)
+
+line level    source
+
+   1          /*----------------------------------------------------------------------------*/
+   2          /******************************************************************************
+   3           ** Include files
+   4           ******************************************************************************/
+   5          #include "Global.h"
+   6          /*--------------------------------------------------------------*/
+   7          uint8_t SmokeMode,ChanNum;
+   8          uint16_t RefVolValue;
+   9          
+  10          uint16_t AdBatValueSum;
+  11          uint8_t AdBatCnt;
+  12          
+  13          uint8_t PwmPeriodCnt,PwmDuty;
+  14          uint16_t AdOutValue,AdOutValueSum;
+  15          uint8_t AdOutCnt;
+  16          
+  17          uint8_t Pwm2PeriodCnt,Pwm2Duty;
+  18          uint16_t AdOut2Value,AdOut2ValueSum;
+  19          uint8_t AdOut2Cnt;
+  20          
+  21          ByteBit   SmokeFlag;
+  22          ByteBit   SmokeFlag1;
+  23          /*-------------------------------------------------*/
+  24          const uint16_t code  RefVolTab[3]={ 3300,3500,3400};
+  25          const uint16_t code  RefVolFallTab[3]={3150,3350,3250};
+  26          const uint8_t  code  RefPowerTab[3]={14,16,20};
+  27          #define RefVolPreheat       1000
+  28          /*-------------------------------------------------*/
+  29          void ReadRefOutValue(void)
+  30          {
+  31   1      //  if(BatVolValue<4000)
+  32   1      //  {
+  33   1      //    RefVolValue=RefVolTab[ChanNum];
+  34   1      //    bPowerFall =0;
+  35   1      //  }
+  36   1      //  else
+  37   1      //  {
+  38   1      //    RefVolValue=RefVolFallTab[SmokeMode];
+  39   1      //    bPowerFall = 1;
+  40   1      //  }
+  41   1        if(ChanNum==1)
+  42   1        {
+  43   2          RefVolValue=3300;
+  44   2        }
+  45   1          if(ChanNum==2)
+  46   1        {
+  47   2          RefVolValue=3200;
+  48   2        }
+  49   1      }
+  50          
+  51          uint8_t CalOutPwmDuty(uint16_t VSource,uint16_t VRef)
+  52          {
+  53   1        uint8_t TempR8;
+C51 COMPILER V9.60.7.0   SMOKEFUNCTION                                                     09/25/2024 11:06:14 PAGE 2   
+
+  54   1        uint32_t m0,m1;
+  55   1        m0 = (uint32_t)VRef;
+  56   1        m1 = (uint32_t)VSource;
+  57   1      #if(WorkCwCv==0)
+  58   1        m0 = m0 * m0;     
+  59   1        m1 = m1 * m1;
+  60   1      #endif
+  61   1        m0 = m0 * PwmDutyMax;
+  62   1        m0 = m0/m1;
+  63   1        TempR8=(uint8_t)m0;
+  64   1        if(TempR8>PwmDutyMax) TempR8=PwmDutyMax;
+  65   1        else if(TempR8<PwmDutyMin) TempR8=PwmDutyMin;
+  66   1      //  else TempR8=(uint8_t)m0;      
+  67   1        return TempR8;  
+  68   1      }
+  69          /*-------------------------------------------------*/
+  70          void StopOutput(void)
+  71          {
+  72   1        OutputOff;
+  73   1        Output2Off;
+  74   1        bSmokeOut=0;   //关闭左负载输出 
+  75   1        bSmokeOut2=0;  //关闭右负载输出
+  76   1        FlagSmoke0 = 0x00;
+  77   1        FlagSmoke1 = 0x00;
+  78   1        ClrHeat;
+  79   1        CHRG_ENABLE;
+  80   1      }
+  81          /*-------------------------------------------------*/
+  82          
+  83          /*****************************************************************************************/
+  84            /*  选择输出通道，chanNum值为0,1,2，分别控制左单发，右单发，双发输出    */
+  85            /*      油量低于5%，切换为单发输出，smokemode为2，为双发输出           */
+  86          /****************************************************************************************/
+  87          void SwitchChannelHeat(void)    
+  88          {
+  89   1        #if(SwitchTorF == 1)
+  90   1          if(ChanNum==1) {bSmokeOut=1;bSmokeOut2=0;}
+  91   1      //    else if(ChanNum==1) {bSmokeOut=0;bSmokeOut2=1;}
+  92   1          else if (ChanNum==2){bSmokeOut=1;bSmokeOut2=1;}
+  93   1        #else
+                  if(OilPercent<=5) 
+                  {
+                    ChanNum=1;bSmokeOut=0;bSmokeOut2=1;     //负载1输出
+                   }        
+                  else
+                  {
+                    if(SmokeMode==2)  
+                    {
+                    bSmokeOut=1;bSmokeOut2=1;
+                    }    //双发
+                    else
+                    {
+                      if(ChanNum==0) {ChanNum=1;bSmokeOut=1;bSmokeOut2=0;}        //负载1输出
+                      else if(ChanNum==1) {ChanNum=0;bSmokeOut=0;bSmokeOut2=1;}   //负载2输出
+                    }
+                  }
+                #endif
+ 111   1      }
+ 112          /*-------------------------------------------------*/
+ 113          void IniHeatStart(void)   //吸烟
+ 114          {
+ 115   1        CHRG_DISABLE;
+C51 COMPILER V9.60.7.0   SMOKEFUNCTION                                                     09/25/2024 11:06:14 PAGE 3   
+
+ 116   1        LowBatCounter=0;
+ 117   1        AdBatValueSum=0;
+ 118   1        AdBatCnt=0;
+ 119   1        bShortC =0;bShortC2 =0;
+ 120   1        PwmDuty=CalOutPwmDuty(BatVolValue,RefVolValue);
+ 121   1        PwmPeriodCnt=0;   //预热计时
+ 122   1        bOutCheck = 0;
+ 123   1        AdOutValueSum = 0;AdOutCnt = 0;
+ 124   1        #if(TwoLoadForT == 1)
+ 125   1        Pwm2Duty=PwmDuty;
+ 126   1        Pwm2PeriodCnt=20;
+ 127   1        bOut2Check = 0;
+ 128   1        AdOut2ValueSum = 0;AdOut2Cnt = 0;
+ 129   1        #endif
+ 130   1        bBatCheck = 0;
+ 131   1        bWorkStart = 1;
+ 132   1        DelayState=0;
+ 133   1        SmokeTime = 0;
+ 134   1      
+ 135   1        LEDP_SMOKING;
+ 136   1        SwitchChannelHeat();
+ 137   1        FlagSmoke0 = 0xA5;
+ 138   1        FlagSmoke1 = 0x5A;
+ 139   1        SetHeat;
+ 140   1      }
+ 141          /*-------------------------------------------------*/
+ 142          void IniSmokeMode(void)
+ 143          {
+ 144   1        ReadRefOutValue();
+ 145   1        IniHeatStart();
+ 146   1        StateStep = 0;
+ 147   1      
+ 148   1        MainState=MainSmoke;
+ 149   1      }
+ 150          /*-------------------------------------------------*/
+ 151          void MainSmokeMode(void)
+ 152          {
+ 153   1        if(MainState!=MainSmoke) return;
+ 154   1        if(SmokeTime >= SmokeTimeMax)  //10s
+ 155   1        {
+ 156   2          StopOutput();
+ 157   2          LEDP_TIMEOVER;
+ 158   2          IniWarningMode();
+ 159   2          return;
+ 160   2        }
+ 161   1        /*------------------------------------*/
+ 162   1        if(!bMicOld)   
+ 163   1        {   
+ 164   2          StopOutput();     
+ 165   2          // LEDP_SMOKEOVER;
+ 166   2          LEDP_STANDBY;
+ 167   2          DelayState =0;   //每次吸烟之后清零
+ 168   2          MainState=MainStandby;
+ 169   2          return;
+ 170   2        }
+ 171   1      //  #if(SwitchTorF == 1)
+ 172   1      //  SwitchChannelHeat();
+ 173   1      //  #endif
+ 174   1        ShortCheck();if(MainState!=MainSmoke) {return;} 
+ 175   1      //  if(bWorkStart==1)
+ 176   1      //  {
+ 177   1      //    if(SmokeMode==2)   //双发模式
+C51 COMPILER V9.60.7.0   SMOKEFUNCTION                                                     09/25/2024 11:06:14 PAGE 4   
+
+ 178   1      //    {
+ 179   1      //      if(SmokeTime >= 30)
+ 180   1      //      {
+ 181   1      //        bWorkStart =0;
+ 182   1      //        if(OilPercent<=5) {ChanNum=1;bSmokeOut=0;bSmokeOut2=1;}
+ 183   1      //        else
+ 184   1      //        {
+ 185   1      //          if(ChanNum==0) {ChanNum=1;bSmokeOut=1;bSmokeOut2=0;}
+ 186   1      //          else if(ChanNum==1) {ChanNum=0;bSmokeOut=0;bSmokeOut2=1;}
+ 187   1      //        }
+ 188   1      //        if(bPowerFall==1)
+ 189   1      //        {
+ 190   1      //          RefVolValue=3350;
+ 191   1      //        }
+ 192   1      //        else RefVolValue=3500;
+ 193   1      //      }
+ 194   1      //    }
+ 195   1      //    else bWorkStart=0;
+ 196   1      //  }
+ 197   1        /*------------------------------------*/
+ 198   1        if(bSmokeOut==1)    //左单发
+ 199   1        {
+ 200   2          if(PwmPeriodCnt<PwmDuty) {PwmLow;}
+ 201   2          else {PwmHigh;}
+ 202   2        }
+ 203   1        else {PwmHigh;}
+ 204   1        #if(TwoLoadForT == 1)
+ 205   1        if(bSmokeOut2==1)   //右单发
+ 206   1        {
+ 207   2          if(Pwm2PeriodCnt<Pwm2Duty) {Pwm2Low;}
+ 208   2          else {Pwm2High;}
+ 209   2        }
+ 210   1        else {Pwm2High;}
+ 211   1        #endif
+ 212   1        /*------------------------------------*/
+ 213   1        ShortCheck();if(MainState!=MainSmoke) {return;} 
+ 214   1        CheckHeatOutput();
+ 215   1        CheckSmokeBatState();
+ 216   1          /*------------------------------------*/
+ 217   1      }
+ 218          /*--------------------------------------------------------------*/
+ 219          #if(PreHeatForT == 1)
+              void MainPreHeatFunction(void)
+              {
+                  if(MainState != MainPreHeat) return;
+                  switch(StateStep)
+                  {
+                      case 0:
+                      {
+                          if(bBatLow==1 || BatPowPercent==0)
+                          {
+                              LEDP_BATLOW;
+                              IniWarningMode();
+                              return;
+                          }
+                          /*--------------------------------------*/
+                          //CheckLoadState();
+                          if(MainState != MainPreHeat) return;
+                          /*--------------------------------------*/
+                          CheckBatPercent();
+                          /*--------------------------------------*/
+                          RefVolValue=RefVolPreheat;
+C51 COMPILER V9.60.7.0   SMOKEFUNCTION                                                     09/25/2024 11:06:14 PAGE 5   
+
+                          IniHeatStart();
+                        StateStep = 1;
+                          break;
+                      }
+                      /*----------------------------------*/
+                      case 1:
+                      {
+                       if(SmokeTime >= PreheatTime)
+                       {
+                        StopOutput();
+                        LEDP_STANDBY;
+                        MainState=MainStandby;
+                        return;
+                       }
+                        /*------------------------------------*/
+                       if(bMicOld)
+                       {    
+                        IniSmokeMode();
+                        return;
+                       }
+                      #if(SwitchTorF == 1)
+                      SwitchChannelHeat();
+                      #endif
+                       ShortCheck();if(MainState!=MainSmoke) {return;} 
+                       /*------------------------------------*/
+                       if(bSmokeOut==1)
+                       {
+                        if(PwmPeriodCnt<PwmDuty) {PwmLow;}
+                        else {PwmHigh;}
+                       }
+                       else {PwmHigh;}
+                       #if(TwoLoadForT == 1)
+                       if(bSmokeOut2==1)
+                       {
+                        if(Pwm2PeriodCnt<Pwm2Duty) {Pwm2Low;}
+                        else {Pwm2High;}
+                       }
+                       else {Pwm2High;}
+                       #endif
+                       /*------------------------------------*/
+                       ShortCheck();if(MainState!=MainSmoke) {return;} 
+                       CheckHeatOutput();
+                       CheckSmokeBatState();
+                       /*------------------------------------*/
+                          break;
+                      }
+                  }
+              }
+              #endif
+ 289          /*--------------------------------------------------------------*/
+ 290          void CheckHeatOutput(void)
+ 291          {
+ 292   1        CheckLoadVoltage();
+ 293   1        if(MainState!=MainSmoke) return;
+ 294   1        AdjustLoadVoltage();
+ 295   1        
+ 296   1        CheckLoad2Voltage();
+ 297   1        if(MainState!=MainSmoke) return;
+ 298   1        AdjustLoad2Voltage();
+ 299   1      }
+ 300          void CheckSmokeBatState(void)
+ 301          {
+C51 COMPILER V9.60.7.0   SMOKEFUNCTION                                                     09/25/2024 11:06:14 PAGE 6   
+
+ 302   1        uint32_t m,n;
+ 303   1        if(!bBatCheck) return;
+ 304   1        bBatCheck =0;
+ 305   1        AdBatValueSum += ReadAdResult(AD_1V2);//
+ 306   1        AdBatCnt++;
+ 307   1        if(AdBatCnt<5) return;
+ 308   1        m =(uint32_t) (AdBatValueSum/5);
+ 309   1        n = 4915200 /m; // 1.20*1000*4096/AD值
+ 310   1        RefVddValue = (uint16_t) n;
+ 311   1        BatVolValue = RefVddValue + BalVolOffset;
+ 312   1          AdBatValueSum=0;
+ 313   1        AdBatCnt=0;
+ 314   1          if(BatVolValue < LowBatVoltage1)
+ 315   1          {
+ 316   2              if(++LowBatCounter > 30)  //300MS
+ 317   2              {
+ 318   3                  StopOutput();
+ 319   3                  LEDP_BATLOW;
+ 320   3                  IniWarningMode();
+ 321   3                  return;
+ 322   3              }
+ 323   2          }
+ 324   1          else LowBatCounter=0;
+ 325   1      }
+ 326          /*--------------------------------------------------------------*/
+ 327          void CheckLoadVoltage(void)
+ 328          {
+ 329   1        if(bSmokeOut==0) return;
+ 330   1        if(bMosOn==1)
+ 331   1        {
+ 332   2          LoadADInput;
+ 333   2          AdOutValue=ReadAdResult(AD_VolChannel);
+ 334   2          if(AdOutValue<LoadRSCAdValue)
+ 335   2          {
+ 336   3            AdOutValue=ReadAdResult(AD_VolChannel);
+ 337   3            if(AdOutValue<LoadRSCAdValue)
+ 338   3            {
+ 339   4              StopOutput();
+ 340   4              LEDP_LOADSC;
+ 341   4              IniWarningMode();
+ 342   4              return;
+ 343   4            }
+ 344   3          }
+ 345   2        }
+ 346   1      }
+ 347          void AdjustLoadVoltage(void)
+ 348          {
+ 349   1        uint16_t TempR;
+ 350   1        uint32_t TempR32;
+ 351   1        if(bSmokeOut==0) return;
+ 352   1        if(bOutCheck == 0) return;
+ 353   1        bOutCheck = 0;
+ 354   1        AdOutValueSum += AdOutValue;
+ 355   1        AdOutCnt++;
+ 356   1        if(AdOutCnt<5) return;
+ 357   1        TempR = (AdOutValueSum/5);
+ 358   1        AdOutValueSum=0;
+ 359   1        AdOutCnt = 0;
+ 360   1        TempR32 =(uint32_t) TempR;
+ 361   1        TempR32 = TempR32*RefVddValue;
+ 362   1        TempR32 = TempR32/4096;
+ 363   1        TempR = (uint16_t)(TempR32);
+C51 COMPILER V9.60.7.0   SMOKEFUNCTION                                                     09/25/2024 11:06:14 PAGE 7   
+
+ 364   1        PwmDuty=CalOutPwmDuty(TempR,RefVolValue); 
+ 365   1      }
+ 366          /*--------------------------------------------------------------*/
+ 367          #if(TwoLoadForT == 1)
+ 368          void CheckLoad2Voltage(void)
+ 369          {
+ 370   1        if(bSmokeOut2==0) return;
+ 371   1          if(bMos2On == 1)
+ 372   1        {
+ 373   2          Load2ADInput;
+ 374   2          AdOut2Value=ReadAdResult(AD_Vol2Channel);
+ 375   2          if(AdOut2Value<LoadRSCAdValue)
+ 376   2          {
+ 377   3            AdOut2Value=ReadAdResult(AD_Vol2Channel);
+ 378   3            if(AdOut2Value<LoadRSCAdValue)
+ 379   3            {
+ 380   4              StopOutput();
+ 381   4              LEDP_LOADSC;
+ 382   4              IniWarningMode();
+ 383   4              return;
+ 384   4            }
+ 385   3          }
+ 386   2        }
+ 387   1      }
+ 388          void AdjustLoad2Voltage(void)
+ 389          {
+ 390   1        uint16_t TempR;
+ 391   1        uint32_t TempR32;
+ 392   1        if(bSmokeOut2==0) return;
+ 393   1        if(bOut2Check == 0) return;
+ 394   1        bOut2Check = 0;
+ 395   1        AdOut2ValueSum += AdOut2Value;
+ 396   1        AdOut2Cnt++;
+ 397   1        if(AdOut2Cnt<5) return;
+ 398   1        TempR = (AdOut2ValueSum/5);
+ 399   1        AdOut2ValueSum=0;
+ 400   1        AdOut2Cnt = 0;
+ 401   1        TempR32 =(uint32_t) TempR;
+ 402   1        TempR32 = TempR32*RefVddValue;
+ 403   1        TempR32 = TempR32/4096;
+ 404   1        TempR = (uint16_t)(TempR32);
+ 405   1        Pwm2Duty=CalOutPwmDuty(TempR,RefVolValue);  
+ 406   1      }
+ 407          #endif
+ 408          /*--------------------------------------------------------------*/
+ 409          /*---------------------------------------------------*/
+ 410          void ShortCheck(void)
+ 411          {
+ 412   1        if(bLoadSC==1 || bLoad2SC==1)   //负载1和负载2短路
+ 413   1        {
+ 414   2          bLoadSC =0;
+ 415   2          bLoad2SC =0;
+ 416   2          StopOutput();
+ 417   2          LEDP_LOADSC;
+ 418   2          IniWarningMode();
+ 419   2        }
+ 420   1      }
+ 421          
+ 422          /*---------------------------------------------------*/
+ 423          /*-----------------------------------------------------------*/
+ 424          /*--------------------------------------------------------------*/
+ 425          /*--------------------------------------------------------------*/
+C51 COMPILER V9.60.7.0   SMOKEFUNCTION                                                     09/25/2024 11:06:14 PAGE 8   
+
+ 426          
+ 427          /*--------------------------------------------------------------*/
+ 428          /*--------------------------------------------------------------*/
+ 429          /*--------------------------------------------------------------*/
+ 430          
+ 431          /*--------------------------------------------------------------*/
+ 432          
+ 433          
+ 434          
+ 435          
+ 436          
+ 437          
+ 438          
+ 439          
+ 440          
+ 441          
+ 442          
+ 443          
+ 444          
+ 445          
+ 446          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1421    ----
+   CONSTANT SIZE    =     15    ----
+   XDATA SIZE       =     23      20
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

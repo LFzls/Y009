@@ -1,0 +1,493 @@
+C51 COMPILER V9.60.7.0   SUBFUNCTION                                                       09/25/2024 11:06:14 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SUBFUNCTION
+OBJECT MODULE PLACED IN .\out\SubFunction.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE src\SubFunction.c LARGE OPTIMIZE(6,SPEED) BROWSE INCDIR(.\Drivers\inc;.\
+                    -Drivers\src;.\src;.\inc;.\inc) DEBUG OBJECTEXTEND PRINT(.\list\SubFunction.lst) TABS(2) OBJECT(.\out\SubFunction.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2           ** Function :  task.c
+   3           ******************************************************************************/
+   4          
+   5          /******************************************************************************
+   6           ** Include files
+   7           ******************************************************************************/
+   8          #include "Global.h"
+   9          /*--------------------------------------*/
+  10          /*--------------------------------------------------------------*/
+  11          void CheckBatPercent(void)  //¼ì²éµç³ØµçÁ¿°Ù·Ö±È²¢¸ù¾ÝÐèÒªµ÷Õû BatPowPercent£¨µç³Ø¹¦ÂÊ°Ù·Ö±È£©
+  12          {
+  13   1        uint8_t TempR;
+  14   1        TempR = CalBatPercent(BatVolValue);  //¼ÆËãµç³ØµçÁ¿£¬¸³Öµ¸øTemR
+  15   1        if(TempR<BatPowPercent)   //Èç¹ûµ±Ç°Êµ¼Ê²âÁ¿µçÑ¹Ð¡ÓÚµ±Ç°µÄ BatPowPercent
+  16   1        {
+  17   2          if(PuffTime >= TimePerPuffMin) // PuffTime(ÎüÑÌÊ±¼ä) ÊÇ·ñ´óÓÚÉè¶¨µÄ×îÐ¡ÎüÑÌÊ±¼ä   PuffTime£ºÃ¿´ÎÎüÑÌÖÐ¶Ï
+             -ÖÐ¶¼»áÀÛ¼Ó
+  18   2          {
+  19   3            PuffTime =0;
+  20   3            if(BatPowPercent > BatPerStep)
+  21   3            {
+  22   4              BatPowPercent -=BatPerStep;   //µçÁ¿¸ñÊý¼õ1
+  23   4              //CalBatLevel();  //
+  24   4            }
+  25   3          }
+  26   2        }
+  27   1      
+  28   1        else
+  29   1        {
+  30   2          if(PuffTime >= TimePerPuffMax)  //Èç¹û TempR Ã»ÓÐÐ¡ÓÚµ±Ç°µÄ BatPowPercent£¬²¢ÇÒÎüÑÌ³¬¹ýÉè¶¨µÄ×î´óÎüÑÌÊ±¼
+             -ä
+  31   2          {
+  32   3            PuffTime =0;
+  33   3            if(BatPowPercent > BatPerStep)
+  34   3            {
+  35   4              BatPowPercent -=BatPerStep;
+  36   4              //CalBatLevel();  //
+  37   4            }
+  38   3          }
+  39   2        }
+  40   1      }
+  41          /*--------------------------------------------------------------*/
+  42          void CheckLoadState(void)    //ÏÈ¹Øµô
+  43          {
+  44   1        LoadIOInput;   //ADC1ÉèÖÃÎªÊä³ö¿Ú
+  45   1        DelayNuS(10); //ÑÓ³Ù 10 Î¢Ãë£¬È·±£ÊäÈëÎÈ¶¨
+  46   1        if(LOAD_FALSE) {SetLoadNC;ClrLoadSC;}   //¸ºÔØ1¿ªÂ·
+  47   1        else
+  48   1        {
+  49   2          PwmLow;  //´ò¿ª¸ºÔØ1Êä³ö
+  50   2          DelayNuS(20);
+  51   2          if(LOAD_TRUE) {ClrLoadNC;SetLoadSC;}   //¸ºÔØ1¶ÌÂ·
+  52   2          else
+C51 COMPILER V9.60.7.0   SUBFUNCTION                                                       09/25/2024 11:06:14 PAGE 2   
+
+  53   2          {
+  54   3            LoadADInput;
+  55   3            DelayNuS(30);
+  56   3            AdOutValue=ReadAdResult(AD_VolChannel);//Çå³ý¸ºÔØ1¿ªÂ·ºÍ¶ÌÂ·±êÖ¾
+  57   3            if(AdOutValue > LoadRSCAdValue) {ClrLoadNC;ClrLoadSC;}  
+  58   3            else
+  59   3            {
+  60   4              AdOutValue=ReadAdResult(AD_VolChannel);//
+  61   4              if(AdOutValue > LoadRSCAdValue) {ClrLoadNC;ClrLoadSC;}  //Çå³ý¸ºÔØ1¿ªÂ·ºÍ¶ÌÂ·±êÖ¾
+  62   4              else {ClrLoadNC;SetLoadSC;}
+  63   4            }
+  64   3          }
+  65   2          PwmHigh;
+  66   2        }
+  67   1        if(bLoadSC)
+  68   1        {
+  69   2          IniWarningMode();
+  70   2          LEDP_LOADSC;
+  71   2          return;
+  72   2        }
+  73   1        #if(TwoLoadForT==1)
+  74   1        Load2IOInput;
+  75   1        DelayNuS(10);
+  76   1        if(LOAD2_FALSE) {SetLoad2NC;ClrLoad2SC;}
+  77   1        else
+  78   1        {
+  79   2          Pwm2Low;
+  80   2          DelayNuS(20);
+  81   2          if(LOAD2_TRUE) {ClrLoad2NC;SetLoad2SC;}
+  82   2          else
+  83   2          {
+  84   3            Load2ADInput;
+  85   3            DelayNuS(30);
+  86   3            AdOut2Value=ReadAdResult(AD_Vol2Channel);
+  87   3            if(AdOut2Value > LoadRSCAdValue) {ClrLoad2NC;ClrLoad2SC;}
+  88   3            else
+  89   3            {
+  90   4              AdOut2Value=ReadAdResult(AD_Vol2Channel);//
+  91   4              if(AdOut2Value > LoadRSCAdValue) {ClrLoad2NC;ClrLoad2SC;}
+  92   4              else {ClrLoad2NC;SetLoad2SC;}
+  93   4            }
+  94   3          }
+  95   2          Pwm2High;
+  96   2        }
+  97   1        if(bLoad2SC)   //¸ºÔØ2¶ÌÂ·
+  98   1        {
+  99   2          IniWarningMode();
+ 100   2          LEDP_LOADSC;
+ 101   2          return;
+ 102   2        }
+ 103   1        #endif
+ 104   1        #if(SwitchTorF== 1)
+ 105   1        if(ChanNum==1)
+ 106   1        {
+ 107   2           if(bLoadNC==1)
+ 108   2           {
+ 109   3               LEDP_LOADNC;
+ 110   3               IniWarningMode();
+ 111   3           }
+ 112   2        }
+ 113   1        else if(ChanNum==1)
+ 114   1        {
+C51 COMPILER V9.60.7.0   SUBFUNCTION                                                       09/25/2024 11:06:14 PAGE 3   
+
+ 115   2           if(bLoad2NC==1)
+ 116   2           {
+ 117   3               LEDP_LOADNC;
+ 118   3               IniWarningMode();
+ 119   3           }
+ 120   2        }
+ 121   1        else
+ 122   1        {
+ 123   2           if(bLoadNC==1 || bLoad2NC==1)
+ 124   2           {
+ 125   3               LEDP_LOADNC;
+ 126   3               IniWarningMode();
+ 127   3           }  
+ 128   2        }
+ 129   1        #endif
+ 130   1         if(bLoad2NC==1 || bLoad2NC==1)
+ 131   1         {
+ 132   2           LEDP_LOADNC;
+ 133   2           IniWarningMode();
+ 134   2         }  
+ 135   1      }
+ 136          /*--------------------------------------------------------------*/
+ 137          void IniMainPowerOn(void)
+ 138          {
+ 139   1        bBatOD=0; bBatLow = 0;
+ 140   1        DelayState = 0;
+ 141   1        StateStep = 0;
+ 142   1        LEDP_ALLON;//LEDP_POWERON;
+ 143   1      //  bKeyEnable =0;  //¹Ø±Õ°´¼ü¹¦ÄÜ
+ 144   1        ReadBatteryVoltage();
+ 145   1        BatPowPercent=CalBatPercent(BatVolValue);   //¼ÆËãµç³ØµÄµçÁ¿°Ù·Ö±È
+ 146   1        BatCounter = 0;
+ 147   1        LowBatCounter = 90;
+ 148   1        BatODCounter = 90;
+ 149   1        MainState = MainPowerOn;
+ 150   1      }
+ 151          /*--------------------------------------*/
+ 152          void MainPoweronFunction(void)
+ 153          {
+ 154   1          uint8_t TempR0,TempR1;
+ 155   1          if(MainState != MainPowerOn) //Èç¹ûµ±Ç°×´Ì¬²»ÊÇ¿ª»ú£¬ÔòÍË³öº¯Êý£¬²»Ö´ÐÐÈÎºÎ²Ù×÷
+ 156   1           return;
+ 157   1          switch(StateStep)
+ 158   1          {
+ 159   2              case 0:
+ 160   2              {
+ 161   3                  if(bTime100mS)        //¶¨Ê±Æ÷ÖÐ¶ÏÖÐÀÛ¼Ó        
+ 162   3                  {
+ 163   4                    ClrTime100mS;
+ 164   4                    ReadBatteryVoltage();   //¶ÁÈ¡µç³ØµçÑ¹
+ 165   4                    CheckBatteryState();  //¼ì²é¹ýµçÑ¹×´Ì¬
+ 166   4                    CheckBatODState();    //Ã¿100ºÁÃë¼ì²éÒ»´Îµç³ØµçÑ¹²¢¸üÐÂµç³Ø×´Ì¬
+ 167   4                    TempR0=CalBatPercent(BatVolValue+BalVolOffset);//TempR0 ±»¸³ÖµÎª CalBatPercent(BatVolValue + BalVol
+             -Offset) µÄ·µ»ØÖµ£¬Õâ¸öº¯Êý¼ÆËãµ±Ç°µç³ØµçÁ¿µÄ°Ù·Ö±È£¬²¢¿¼ÂÇÁËµçÑ¹²¹³¥
+ 168   4                    if(TempR0>BatPowPercent) TempR1=TempR0-BatPowPercent;
+ 169   4                    else TempR1=BatPowPercent-TempR0;
+ 170   4                    if(TempR1<10)     //µçÑ¹²¹³¥£¬ÆÁÄ»ÁÁÆÁÓÐÑ¹²î   Èç¹û TempR1£¨µçÑ¹²î£©Ð¡ÓÚ 10£¨±íÊ¾µç³ØµçÁ¿±ä»¯½ÏÐ¡£©
+             -£¬ÔòÈÏÎªµç³ØµçÁ¿ÎÈ¶¨
+ 171   4                    {
+ 172   5                      BatCounter++;
+ 173   5                      if(BatCounter>=20)
+ 174   5                      {
+C51 COMPILER V9.60.7.0   SUBFUNCTION                                                       09/25/2024 11:06:14 PAGE 4   
+
+ 175   6                        //CalBatLevel();  //
+ 176   6                        StateStep=1;   //Ìø½øcase1
+ 177   6                        DelayState = 0;
+ 178   6                      }
+ 179   5                    }
+ 180   4                    else //Èç¹û TempR1 ´óÓÚ10£¬ÔòÈÏÎªµç³ØµçÁ¿·¢ÉúÁË½Ï´ó±ä»¯
+ 181   4                    {
+ 182   5                      BatPowPercent=TempR0;  //¸üÐÂ BatPowPercent Îª TempR0
+ 183   5                      BatCounter=0;
+ 184   5                    }
+ 185   4            }            
+ 186   3                  break;
+ 187   3              }
+ 188   2              /*-----------------------*/
+ 189   2              case 1:
+ 190   2              {
+ 191   3                  bSysOn = 1;
+ 192   3                  ClrHeat;
+ 193   3                  PuffTime = 0;
+ 194   3                  StoreFlag = 0x5AA5;
+ 195   3                  SmokeTimeCnt = 0;
+ 196   3                  SmokeTimeCnt1 = 0;
+ 197   3                  SmokeTimeCnt2 = 0;
+ 198   3                  SmokeMode = 1;   //³éÑÌ×´Ì¬
+ 199   3                  // ChanNum =0;
+ 200   3                  FlagSmoke0 = 0x00;
+ 201   3                  FlagSmoke1 = 0x00;
+ 202   3                  bSmokeOut=0;
+ 203   3                  bSmokeOut2=0;
+ 204   3                  if(BatPowPercent==0) {bBatLow = 1;bBatStateOld=0;bBatStateNew=0;}
+ 205   3                  else { bBatLow = 0;bBatStateOld=1;bBatStateNew=1;}
+ 206   3                  LowBatCounter=0;
+ 207   3                  MicIni();
+ 208   3                  //KeyIni();
+ 209   3                  //bKeyEnable =1;   //´ò¿ª°´¼üÊ¹ÄÜ
+ 210   3                  #if(SwitchTorF==1)
+ 211   3                  SwitchIni();
+ 212   3                  #endif
+ 213   3                  CalOilPercent();
+ 214   3                  //CalOilLevel();          
+ 215   3                  IniMainStandby();
+ 216   3                  DelayState = 0;   //
+ 217   3                  break;
+ 218   3              }
+ 219   2              /*-----------------------*/
+ 220   2              case 2:
+ 221   2              {
+ 222   3                  break;
+ 223   3              }    
+ 224   2              /*-----------------------*/
+ 225   2              default:{break;}
+ 226   2          }
+ 227   1      }
+ 228          /*--------------------------------------*/
+ 229          void IniMainStandby(void)
+ 230          {
+ 231   1          DelayState = 0;
+ 232   1          LEDP_STANDBY;
+ 233   1          MainState = MainStandby;
+ 234   1      }
+ 235          /*--------------------------------------*/
+ 236          void MainStandbyFunction(void)
+C51 COMPILER V9.60.7.0   SUBFUNCTION                                                       09/25/2024 11:06:14 PAGE 5   
+
+ 237          {
+ 238   1          if(MainState != MainStandby) return;
+ 239   1          if(bMicOld) 
+ 240   1          {
+ 241   2             if(bBatLow==1 || BatPowPercent == 0 || bBatOD==1)
+ 242   2             {
+ 243   3                 LEDP_BATLOW;
+ 244   3                 IniWarningMode();
+ 245   3                 return;
+ 246   3             }
+ 247   2            if( OilPercent == 0)   //µÍÓÍÁ¿£¬Í£Ö¹Êä³ö£¬ÓÍÁ¿Êý×Ö0ºÍÓÍÁ¿Í¼±êÉÁË¸Ê®´Î
+ 248   2          {
+ 249   3          LEDP_OILLOW;
+ 250   3          IniWarningMode();
+ 251   3          return;
+ 252   3          }
+ 253   2             /*--------------------------------------*/
+ 254   2             CheckLoadState();   //¼ì×è£¬ÏÈ¹Øµô
+ 255   2            if(MainState != MainStandby) return;
+ 256   2             /*--------------------------------------*/
+ 257   2              CheckBatPercent();
+ 258   2          CalOilPercent();
+ 259   2      
+ 260   2             /*--------------------------------------*/
+ 261   2              IniSmokeMode();
+ 262   2              return;
+ 263   2          }
+ 264   1          if(bUsbOld && DelayState>100)   //USB½ÓÈë
+ 265   1          {
+ 266   2              IniChargeMode();
+ 267   2              return;
+ 268   2          }
+ 269   1          if(LedPMode!=LedPSolidOff)
+ 270   1          {
+ 271   2          if(LedPMode==LedPSmokeOver && DelayState>200) {LEDP_STANDBY;}
+ 272   2              if(DelayState>300) { LEDP_ALLOFF;DelayState=0; }   //DelayState:300*10ms
+ 273   2              return;
+ 274   2          }
+ 275   1         if(bMicOld==0 && MIC_FALSE &&(SwStateNew == SwStateOld)  /*&& UsbState==UsbNc /* && KEY_FALSE */ && (De
+             -layState >300))    //ÎªÊ²Ã´Ã»½øË¯Ãß
+ 276   1          {
+ 277   2             IniMainSleep();    
+ 278   2          }
+ 279   1      }
+ 280          /*--------------------------------------*/
+ 281          /*-------------------------------------------------*/
+ 282          void IniWarningMode(void)
+ 283          {
+ 284   1        StopOutput();
+ 285   1        DelayState=0;
+ 286   1        MainState=MainWarning;
+ 287   1      } 
+ 288          
+ 289           
+ 290          /*-------------------------------------------------*/
+ 291          void MainWarningFunction(void)
+ 292          {
+ 293   1          if((LedPMode==LedPSolidOff) || (LedPMode==LedPStandby))
+ 294   1          {
+ 295   2              if(!bMicOld)  //Î´ÎüÑÌ
+ 296   2              {
+ 297   3                  DelayState = 0;
+C51 COMPILER V9.60.7.0   SUBFUNCTION                                                       09/25/2024 11:06:14 PAGE 6   
+
+ 298   3                  MainState = MainStandby;
+ 299   3              }    
+ 300   2          }
+ 301   1      }
+ 302          /*--------------------------------------*/
+ 303          void IniMainSleep(void)
+ 304          {
+ 305   1          DelayState = 0;
+ 306   1          LEDP_ALLOFF;
+ 307   1      //  bKeyEnable =0;  //¹Ø±Õ°´¼ü¹¦ÄÜ
+ 308   1          MainState = MainSleep;
+ 309   1      }
+ 310          /*--------------------------------------*/
+ 311          
+ 312          
+ 313          
+ 314          
+ 315          /*******************************************************************************
+ 316           * \brief   void  EnterSleep(void)
+ 317           ******************************************************************************/
+ 318          void EnterSleep(void)
+ 319          {
+ 320   1          //return;
+ 321   1        EA = 0;
+ 322   1        //bKeyEnable =0;            //¹Ø±Õ°´¼ü
+ 323   1        TR0 = 0;                    // TIMER0 STOP
+ 324   1        ET0 = 0;                    // Interrupt disable
+ 325   1        PwmInitialize();
+ 326   1        PortInitialize();
+ 327   1        LED_GP1_OFF;
+ 328   1        LED_GP2_OFF;
+ 329   1        LED_GP3_OFF;
+ 330   1        LED_GP4_OFF;
+ 331   1        LED_COM1_LOW;
+ 332   1        LED_COM2_LOW;
+ 333   1        LED_COM3_LOW;
+ 334   1        LED_COM4_LOW;
+ 335   1        LED_COM5_LOW;
+ 336   1        LED_COM6_LOW;
+ 337   1        LED_COM7_LOW;
+ 338   1        PDOWN_LVD_DISABLE;
+ 339   1        LVRPD = 0;
+ 340   1        VBGEN_DISABLE;
+ 341   1        SwInIO;//½«²¨¶¯¿ª¹ØÉèÖÃÎªIOÊäÈë½Å
+ 342   1        
+ 343   1        P3 |= 0x03;
+ 344   1        PORTIDX = 3;    //PORT3
+ 345   1        PINMOD10 = (PINMOD10 & 0x0f | PIN_H_MODE_OD_IPD_WAKEUP);//PIN_H_MODE_OD_IPD_WAKEUP);   //MIC KEYÒª¸ÄÎª²¨¶
+             -¯¿ª¹Ø
+ 346   1        
+ 347   1        PIN_USB = 1;
+ 348   1        PORTIDX = 0;    //PORT0
+ 349   1      //  PINMOD76 = (PINMOD76&0xf0 | PIN_L_MODE_OD_WAKEUP);//P0.7,P0.6   //USBIN
+ 350   1        PINMOD32 = (PINMOD32 & 0xf0 | PIN_L_MODE_OD_WAKEUP);
+ 351   1        SET_REG_BITS(INTE1,PCIE,1); //¿ªÆôÒý½Å±ä»¯ÖÐ¶Ï 
+ 352   1        INTFLG = 0x00;
+ 353   1        EA=1;
+ 354   1        /*-------------------------------*/
+ 355   1      //ENTER_STOP_MODE;
+ 356   1      //  STPSCK = 1;                      //Í£Ö¹ÂýÖÓ
+ 357   1        SET_REG_BITS(AUX2, PWRSAV, 1);     //PWRSAVÖÃÒ»£¬½øÒ»²½½µµÍ¹¦ºÄ
+ 358   1        SET_REG_BITS(PCON, PD, 1);         //Í£Ö¹Î»,Èç¹ûÖÃ 1 ½øÈëÍ£Ö¹Ä£Ê½¡£
+C51 COMPILER V9.60.7.0   SUBFUNCTION                                                       09/25/2024 11:06:14 PAGE 7   
+
+ 359   1        SET_REG_BITS(AUX2, PWRSAV, 0);     //pwrsav = 0£»
+ 360   1      //  STPSCK = 0;                      //ÂýÖÓ´ò¿ª
+ 361   1        _nop_();
+ 362   1        _nop_();
+ 363   1        _nop_();
+ 364   1        _nop_();
+ 365   1        _nop_();
+ 366   1        _nop_();
+ 367   1        SET_REG_BITS(INTE1,PCIE,0); //Disable IO level change interrupt.
+ 368   1        INTFLG = 0x00;
+ 369   1        PwmInitialize();
+ 370   1        Bsp_FastClock_Init(3);//SYSCLKPSC_Div1);  
+ 371   1        Bsp_delay_100us(10);  
+ 372   1        OPTION = (0x40 | WdtClkPsc_0| AdcClkPsc_8);
+ 373   1        PortInitialize();
+ 374   1        AdcInitialize();
+ 375   1        Lvd_Initialize();
+ 376   1        Timer0_Init();
+ 377   1        WDG_Init(); //240MS
+ 378   1        MicIni();
+ 379   1        //KeyIni();
+ 380   1        SwitchIni();    //¹Øµô£¬²»¹ØµôÖÃÖÐµµµÄÊ±ºò£¬»á´¥·¢¿ª»ú
+ 381   1        EA=1;
+ 382   1      }
+ 383          
+ 384          /*---------------------------------------------*/
+ 385          void IniMainKeyScreenOn(void)
+ 386          {
+ 387   1        DelayState = 0;
+ 388   1        StateStep = 0;
+ 389   1        LED_SCREENON;
+ 390   1        LEDP_SCREENON;
+ 391   1        MainState = MainKeyScreenOn;  
+ 392   1      }
+ 393          void MainKeyScreenOn(void)
+ 394          {
+ 395   1        if(MainState != MainKeyScreenOn) return;
+ 396   1        
+ 397   1      }
+ 398          
+ 399          void IniMainTurnOn(void)
+ 400          {   
+ 401   1        if(MainState != MainTurnOn) return;
+ 402   1          LEDP_STANDBY;
+ 403   1          DelayState = 0;
+ 404   1          MainState = MainStandby;
+ 405   1      }
+ 406          /*------------------------------------------*/
+ 407          void IniMainTurnOff(void)
+ 408          {
+ 409   1          LEDP_ALLOFF;
+ 410   1          DelayState = 0;
+ 411   1          MainState = MainTurnOff;
+ 412   1      }
+ 413          
+ 414          /*--------------------------------------------------------------*/
+ 415          #if(OilPercentForT == 1)
+ 416          void CalOilPercent(void)   //¼ÆËãÓÍÁ¿°Ù·Ö±È£¬¸üÐÂOilPercent 
+ 417          {
+ 418   1        uint8_t m;
+ 419   1        uint32_t m0,m1,m2;
+ 420   1        m0=(uint32_t)SmokeTimeCnt; //SmokeTimeCnt¸³Öµ¸øm0
+C51 COMPILER V9.60.7.0   SUBFUNCTION                                                       09/25/2024 11:06:14 PAGE 8   
+
+ 421   1        m1=(uint32_t)SmokeTimeCnt1;
+ 422   1        m1=(m1*100)/100;  
+ 423   1        m2=(uint32_t)SmokeTimeCnt2;
+ 424   1        m2=(m2*200)/100;
+ 425   1        m0 = m0+m1+m2;  //½« m0, m1, m2 Ïà¼Ó£¬µÃµ½×ÜµÄÊ¹ÓÃÊ±¼ä
+ 426   1        if(m0 >= OilTimeTotal) {OilPercent=0;} //Èç¹û m0 ´óÓÚ»òµÈÓÚ OilTimeTotal£¬ÔòÉèÖÃ OilPercent Îª 0£¬±íÊ¾ÓÍÁ
+             -¿ºÄ¾¡
+ 427   1        else  //·ñÔò£¬¼ÆËãÊ£ÓàÓÍÁ¿
+ 428   1        {
+ 429   2          m2 = OilTimeTotal-m0;  //¼ÆËãÊ£ÓàÊ±¼ä m2£¬µÈÓÚ OilTimeTotal ¼õÈ¥ m0£¬È»ºó³ýÒÔ OilTimePer
+ 430   2          m2 = m2/(OilTimePer);
+ 431   2          m = (uint8_t) (m2);
+ 432   2          m = m+1;  //½«½á¹û×ª»»Îª uint8_t ÀàÐÍ£¬²¢¼Ó 1£¬È·±£ÖÁÉÙÓÐ 1 µÄÖµ¡£
+ 433   2          if(m>100) m=100;  //Èç¹û¼ÆËã½á¹û m ´óÓÚ 100£¬Ôò½«ÆäÏÞÖÆÎª 100
+ 434   2          OilPercent = m;  //¸üÐÂ OilPercent ±äÁ¿
+ 435   2        }
+ 436   1      }
+ 437          #if(OilLevelForT == 1)
+              void CalOilLevel(void)
+              {
+                if(OilPercent == 0) OilLevel=0;
+                else if(OilPercent <= 10) OilLevel=1;
+                else if(OilPercent <= 35) OilLevel=2;
+                else if(OilPercent <= 65) OilLevel=3;
+                else OilLevel=4;
+              }
+              #endif
+ 447          #endif
+ 448          /*--------------------------------------------------------------*/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1645    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      13
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
